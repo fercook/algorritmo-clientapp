@@ -33,7 +33,6 @@ MIDI.loadPlugin({
  * @return {Boolean}        True if tones are able to be played, false otherwise.
  */
 function processTones() {
-    console.log("PLAYING TONES!");
     if(!midiStreamerLoaded) return false;
 
     for(var i = 0; i < handArray.length; ++i) {

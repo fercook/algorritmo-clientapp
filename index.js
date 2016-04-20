@@ -1,6 +1,9 @@
 //Constants containing the palm height range accepted as a note input.
-MIN_HEIGHT = 60;
+MIN_HEIGHT = 80;
 MAX_HEIGHT = 400;
+
+MIN_WIDTH = -150;
+MAX_WIDTH = 150;
 
 //Constants containing threshold at which a gesture starts being identified as valid.
 //The leap motion library provides a percentage indicating how possible it's the user
@@ -160,6 +163,8 @@ function processHand(handFrame) {
         if(isPinching(handFrame) && !handState.justPinched) changeToNextIntrument(handFrame.type, handState);
         else if(!isPinching(handFrame)) markAsNonPinching(handState);
     }
+
+    updateHandOnScreen(handFrame, handState);
 }
 
 //Leap loop. It will receive user interaction using leap motion.
