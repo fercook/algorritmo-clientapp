@@ -9,7 +9,10 @@ var INTERVAL_TIME = 300;
 //How hard the note hits, from 0-127.
 var VELOCITY = 127;
 //How long to hold the note, in seconds.
-var DELAY = 0.5; 
+var DELAY = 0.5;
+
+//The first midi note id is:
+var FIRST_NOTE_ID = 21;
 
 var midiStreamerLoaded = false;
 
@@ -36,12 +39,13 @@ function processTones() {
     if(!midiStreamerLoaded) return false;
 
     for(var i = 0; i < handArray.length; ++i) {
+        console.log("PLAYING TONE: " + handArray[i].currentTone);
         if(handArray[i].currentTone) {
             MIDI.programChange(
                 handArray[i].channel, 
                 INSTRUMENT_LIST[handArray[i].instrumentIndex].id);
-            MIDI.noteOn(handArray[i].channel, handArray[i].currentTone, VELOCITY)
-            MIDI.noteOff(handArray[i].channel, handArray[i].currentTone, DELAY)
+            MIDI.noteOn(handArray[i].channel, FIRST_NOTE_ID + handArray[i].currentTone, VELOCITY)
+            MIDI.noteOff(handArray[i].channel, FIRST_NOTE_ID + handArray[i].currentTone, DELAY)
 
             handArray[i].currentTone = null;
         }

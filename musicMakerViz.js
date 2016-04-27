@@ -1,15 +1,105 @@
-d3.select("#svg-container").append("svg")
-    .attr("width", "100%")
-    .attr("height", "100%")
-    .attr("class", "svg-tag")
-    .attr("background-color", "pink");
+var CIRCLE_RADIUS = 20;
+
+function adjustSVGArea() {
+    d3.select(".svg-tag").remove();
+
+    var svg = d3.select("#svg-container").append("svg")
+    .attr("width", window.innerWidth)
+    .attr("height", window.innerHeight)
+    .attr("class", "svg-tag");
+
+    svg.append("g").attr("class", "circle-container");
+    svg.append("g").attr("class", "tail-container");
+
+    printLines(NUMBER_OF_OCTAVES*NUMBER_OF_SEMITONES, window.innerWidth, window.innerHeight);
+    svg.append("g").attr("class", "speech-ballons");
+}
+adjustSVGArea();
+window.addEventListener("resize", adjustSVGArea);
+
+/**
+ * Print numLines horizontal lines simulating a pentagram. Those lines are 
+ * equally separated.
+ * totalHeight is the total height of all lines.
+ * width is the width of each line.
+ */
+function printLines(numLines, width, totalHeight) {
+    var linesContainer = 
+        d3.select(".svg-tag").append("g").attr("class", "lines-container");
+    var lineHeight = totalHeight/numLines;
+
+    for(var i = 0; i < numLines; ++i)
+        linesContainer.append("svg:line")
+            .attr("x1", 0)
+            .attr("y1", lineHeight*i)
+            .attr("x2", width)
+            .attr("y2", lineHeight*i)
+            .attr("class","horizontal-line");
+}
+
+
+function drawSpeechBallon(handid, left, top, instrumentName) {
+    d3.selectAll(".speechB.id-" + handid).remove();
+    d3.selectAll(".instrumentImg.id-" + handid).remove();
+    var speechB = d3.select(".speech-ballons").append("image")
+        .attr("href", "./imgs/speechB.png")
+        .attr("class", "id-" + handid + " speechB")
+        .attr("width", "100px")
+        .attr("height", "100px")
+        .attr("x", left - 100)
+        .attr("y", top - 100);
+    var instrumentImg = d3.select(".speech-ballons").append("image")
+        .attr("href", "./imgs/" + instrumentName + ".png")
+        .attr("class", "id-" + handid + " instrumentImg")
+        .attr("width", "40px")
+        .attr("height", "40px")
+        .attr("x", left - 70)
+        .attr("y", top - 82);
+    speechB.transition()
+        .delay(200)
+        .duration(500)
+        .attr("x", left - 50)
+        .attr("y", top - 50)
+        .attr("width", "0")
+        .attr("height", "0")
+        .style("opacity", "0");
+    instrumentImg.transition()
+        .delay(200)
+        .duration(500)
+        .attr("x", left - 35)
+        .attr("y", top - 41)
+        .attr("width", "0")
+        .attr("height", "0")
+        .style("opacity", "0");
+}
+
 
 function updateHandOnScreen(handFrame, handState) {
-    var left = Math.max(handFrame.palmPosition[0] - MIN_WIDTH, 0)*100/(MAX_WIDTH-MIN_WIDTH);
-    var top = Math.max(handFrame.palmPosition[1] - MIN_HEIGHT, 0)*100/(MAX_HEIGHT-MIN_HEIGHT);
-    d3.select(".svg-tag").append("circle")
-        .attr("cx", left + "%")
-        .attr("cy", (100 - top) + "%")
-        .attr("r", 20)
-        .style("fill", "black");
+    var left = Math.max(handFrame.palmPosition[0] - minValidWidth, 0)*100/(maxValidWidth-minValidWidth);
+    var top = Math.max(handFrame.palmPosition[1] - minValidHeight, 0)*100/(maxValidHeight-minValidHeight);
+    d3.selectAll("circle[cx='" + -CIRCLE_RADIUS + "px']").remove();
+    d3.selectAll(".no-grabbing.id-" + handFrame.id).remove();
+    d3.selectAll("circle[r='0px']").remove();
+    var circle = d3.select(".circle-container").append("circle")
+        .attr("cx", left*window.innerWidth/100 + "px")
+        .attr("cy", (100 - top)*window.innerHeight/100 + "px")
+        .attr("r", CIRCLE_RADIUS)
+        .attr("class", handFrame.type + "-hand-mark " + (isGrabbing(handFrame) ? "grabbing":"no-grabbing") + " id-" + handFrame.id)
+    if(isGrabbing(handFrame)) circle.transition()
+            .duration(left*20)
+            .ease("linear")
+            .attr("cx", -CIRCLE_RADIUS + "px")
+            .attrTween("r", 
+                function() { 
+                    return function(){ 
+                        return Math.max(Math.random()*(CIRCLE_RADIUS-3), 1);
+                    } 
+                }
+            );
+    else circle.transition()
+            .delay(200)
+            .duration(1000)
+            .attr("r", "0px");
+
+    drawSpeechBallon(handFrame.id, left*window.innerWidth/100, (100 - top)*window.innerHeight/100, INSTRUMENT_LIST[handState.instrumentIndex].name);
 }

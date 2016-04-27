@@ -1,0 +1,36 @@
+body {
+    background-color: #58201D;
+}
+
+#svg-container {
+    width: 100vw;
+    height: 100vh;
+    background-color: #58201D;
+}
+
+.horizontal-line {
+    stroke: black;
+}
+
+.right-hand-mark {
+    fill: #2A7E43;
+    opacity: 0.6;
+}
+
+.left-hand-mark {
+    fill: #8A812E;
+    opacity: 0.6;
+}
+
+.grabbing {
+    opacity: 1;
+}
+
+
+.speechB {
+    opacity: 0.6;
+}
+
+.instrumentImg {
+    opacity: 0.8;
+}

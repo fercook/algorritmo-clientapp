@@ -1,20 +1,37 @@
-//Constants containing the palm height range accepted as a note input.
+//Constants containing the palm height range that leap motion is able to recognize.
 MIN_HEIGHT = 80;
 MAX_HEIGHT = 400;
 
+//Constants containing the palm width range that leap motion is able to recognize.
 MIN_WIDTH = -150;
 MAX_WIDTH = 150;
+
+//Variables containing the palm height range accepted as a input. 
+//This range will depend on the screen aspect ratio, defining this way a better 
+//user experience.
+var minValidWidth = MIN_WIDTH;
+var maxValidWidth = MAX_WIDTH;
+
+//Variables containing the palm width range accepted as a input. 
+//This range will depend on the screen aspect ratio, defining this way a better 
+//user experience.
+var minValidHeight = MIN_HEIGHT;
+var maxValidHeight = MAX_HEIGHT;
 
 //Constants containing threshold at which a gesture starts being identified as valid.
 //The leap motion library provides a percentage indicating how possible it's the user
 //to be doing a specific gesture. This rate goes from 0 to 1.
-GRAB_THRESHOLD = 0.6
-PINCH_THRESHOLD = 0.6
+GRAB_THRESHOLD = 0.6;
+PINCH_THRESHOLD = 0.8;
+
+NUMBER_OF_OCTAVES = 7;
+NUMBER_OF_SEMITONES = 12;
 
 //NOTE: Midi notes and semi-notes goes from 0 to 11. And if we want to specify octave, we 
 //      should calculate note + 12 * octave. (octaves goes from 0 to 9, both included).
 //Height of each semitone. There are 12 seminotes * 10 octaves.
-SEMITONE_HEIGHT = (MAX_HEIGHT-MIN_HEIGHT)/(12*10);
+var semitoneHeight = (maxValidHeight-minValidHeight)/(NUMBER_OF_SEMITONES*NUMBER_OF_OCTAVES);
+
 
 INSTRUMENT_LIST = [
     {id: 0,
@@ -44,8 +61,40 @@ var pauseOnGesture = false;
 // Setup Leap loop with frame callback function
 var controllerOptions = {enableGestures: true};
 var handId = -1;
-var loadedChannel0 = false;
 var betweenNotes = false;
+
+/**
+ * This method adjust the limits of the valid area. This is the interactive area 
+ * when using the leap motion. 
+ * This area will be the maximum area possible, the one that matches the screen
+ * aspect ratio and not exceeds the box limited by (MIN|MAX_WIDTH, MIN|MAX_HEIGHT).
+ */
+function adjustLeapValidArea() {
+    var leapWidth = (MAX_WIDTH-MIN_WIDTH);
+    var leapHeight = (MAX_HEIGHT-MIN_HEIGHT);
+    if(window.innerWidth/window.innerHeight >= leapWidth/leapHeight) {
+        minValidWidth = MIN_WIDTH;
+        maxValidWidth = MAX_WIDTH;
+
+        var leapValidHeight = window.innerHeight*leapWidth/window.innerWidth
+        var leapUselessMargin = (leapHeight - leapValidHeight)/2;
+        minValidHeight = MIN_HEIGHT+leapUselessMargin;
+        maxValidHeight = MAX_HEIGHT-leapUselessMargin;
+    }
+    else {
+        var leapValidWidth = window.innerWidth*leapHeight/window.innerHeight
+        var leapUselessMargin = (leapWidth - leapValidWidth)/2;
+        minValidWidth = MIN_WIDTH+leapUselessMargin;
+        maxValidWidth = MAX_WIDTH-leapUselessMargin;
+
+        minValidHeight = MIN_HEIGHT;
+        maxValidHeight = MAX_HEIGHT;
+    }
+    semitoneHeight = (maxValidHeight-minValidHeight)/(NUMBER_OF_SEMITONES*NUMBER_OF_OCTAVES);
+}
+//Call this method when loading the website.
+adjustLeapValidArea();
+window.addEventListener("resize", adjustLeapValidArea);
 
 /**
  * Maps palm height to a tone.
@@ -53,8 +102,9 @@ var betweenNotes = false;
  * @return {int}            tone this height maps to.
  */
 function getTone(palmHeight) {
-    var currentTone = parseInt(Math.max(palmHeight-MIN_HEIGHT, 0.1)/SEMITONE_HEIGHT);
-    return Math.min(currentTone, 12*10 - 1);
+    var currentTone = parseInt(Math.max(palmHeight-minValidHeight, 0.1)/semitoneHeight);
+    console.log("TONE: " + Math.min(currentTone, NUMBER_OF_SEMITONES*NUMBER_OF_OCTAVES - 1));
+    return Math.min(currentTone, NUMBER_OF_SEMITONES*NUMBER_OF_OCTAVES - 1);
 }
 
 /**
