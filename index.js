@@ -152,6 +152,7 @@ function addHand(handFrame) {
         //We should use the channel of the hand that stopped being detected for 
         //longer.
         channel: handArray.length > 0 ? (handArray[handArray.length-1].channel+1)%16 : 0,
+        type: handFrame.type,
     };
 
     handArray[handArray.length] = newHandState;

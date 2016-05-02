@@ -5,9 +5,10 @@
 
 //Constant containing time between tones.
 var INTERVAL_TIME = 300;
+var TEMPO = 200; //beats per minute.
 
 //How hard the note hits, from 0-127.
-var VELOCITY = 127;
+var VELOCITY = 200;
 //How long to hold the note, in seconds.
 var DELAY = 0.5;
 
@@ -16,8 +17,83 @@ var FIRST_NOTE_ID = 21;
 
 var midiStreamerLoaded = false;
 
+var recordEnabled = true;
+
+/**
+ * Contains information about a recorded track.
+ * This is an array of arrays. Each sub-array corresponds to one instrument and 
+ * hand.
+ * We use 8 channels for each hand. We suppose both hands use the same instruments.
+ * So left hand will use 0 to 7 channels and right hand will use 8 to 15. 
+ * @type {Array}
+ */
+var recordingArray = new Array(16);
+
 function onsuccess() {
     midiStreamerLoaded = true;
+}
+
+/**
+ * Given a hand type and an array of hands returns the first hand of this type.
+ * @param  {[Array]} hands 
+ * @param  {[string]} type
+ */
+function getFirstHandWithType(hands, type) {
+    for(var i = 0; i < hands.length; ++i) 
+        if(hands[i].type == type && hands[i].currentTone !== null) return i;
+    return null;
+}
+
+/**
+ * Given an index of recordingArray and a tone, adds this tone to the indicated 
+ * instrument per hand sub-array.
+ * @param  {[type]} instrumentIndex [description]
+ * @param  {[type]} tone            [description]
+ */
+function applyCurrentTone(recordingArrayIndex, tone) {
+    if(!recordingArray[recordingArrayIndex]) recordingArray[recordingArrayIndex] = [];
+    
+    var currentInsArray = recordingArray[recordingArrayIndex];
+    var lastNote = currentInsArray[currentInsArray.length-1];
+    if(lastNote && lastNote.id == tone) ++lastNote.numTimes;
+    else currentInsArray[currentInsArray.length] = {id: tone, numTimes:1};
+}
+
+/**
+ * Adds an empty tone, a silence.
+ * When our system plays a sound, each channel that is not sounding 
+ * at this moment should have a silence. 
+ */
+function addSilence(recordingArrayIndex) {
+    if(!recordingArray[recordingArrayIndex]) recordingArray[recordingArrayIndex] = [];
+
+    var currentInsArray = recordingArray[recordingArrayIndex];
+    var lastNote = currentInsArray[currentInsArray.length-1];
+    if(lastNote && lastNote.id == -1) ++lastNote.numTimes;
+    else currentInsArray[currentInsArray.length] = {id: -1, numTimes:1};
+}
+
+/**
+ * Given a certain point in time, record all notes that are played at this time.
+ * @param  {[Array]} hands array of hands. We support just two hands (one right 
+ * and one left) if more are provident they will be ignored.
+ */
+function record(hands) {
+    var lHand = getFirstHandWithType(hands, "left");
+    var rHand = getFirstHandWithType(hands, "right");
+
+    for(var i = 0; i < recordingArray.length; ++i) {
+        if(lHand !== null && i == hands[lHand].instrumentIndex) 
+            applyCurrentTone(i, hands[lHand].currentTone);
+        if(rHand !== null && i == hands[rHand].instrumentIndex + 8) 
+            applyCurrentTone(i, hands[rHand].currentTone);
+        else addSilence(i);
+    }
+}
+
+
+function isRecording() {
+    return recordEnabled;
 }
 
 //Load Midi streamer
@@ -30,17 +106,103 @@ MIDI.loadPlugin({
     },
 });
 
+function fillTrakWithArray(track, trackArray) {
+    for(var i = 0; i < trackArray.length; ++i) {
+        var channel = i;
+        for(var j = 0; j < trackArray[i].length; ++j) {
+            var tone = trackArray[i][j].id;
+            var wait = trackArray[i][j-1] && trackArray[i][j-1].id == -1 ? trackArray[i][j-1].numTimes*72 : 0;
+            if(tone !== -1)
+                while(trackArray[i][j].numTimes > 0) {
+                    track.addNoteOn(channel, FIRST_NOTE_ID + tone, 0, VELOCITY);
+                    track.addNoteOff(channel, FIRST_NOTE_ID + tone, 72, VELOCITY);
+                    //128 is one quarter of note, one beat.
+                    --trackArray[i][j].numTimes;
+                }
+        }
+       trackArray[i]
+    }
+
+}
+
+//generateMidiFile();
+
+function generateMidiFile() {
+    //TODO: Erase.
+    generateMidi=false;
+
+    var file = new Midi.File();
+    var track = new Midi.Track();
+    file.addTrack(track)
+
+    track.setTempo(TEMPO);
+
+    for(var i = 0; i < INSTRUMENT_LIST.length; ++i) {
+        track.setInstrument(i, INSTRUMENT_LIST[i].id);
+        track.setInstrument(i+8, INSTRUMENT_LIST[i].id);
+    }
+
+    //TODO: Erase.
+    //fakeArray = [];
+    //fakeArray[fakeArray.length] = [{id: 21, numTimes:2000}];
+
+    fillTrakWithArray(track, recordingArray);
+    //fillTrakWithArray(track, fakeArray);
+
+    var str = file.toBytes();
+    var bytes = [];
+
+    for (var i = 0; i < str.length; ++i) {
+        bytes.push(str.charCodeAt(i));
+    }
+
+    var base64String = btoa(String.fromCharCode.apply(null, new Uint8Array(bytes)));
+
+    base64String = "data:image/png;base64," + base64String;
+
+    MIDI.Player.loadFile(base64String, function() {
+        console.log("MIDI file generated.");
+        MIDI.Player.start(); // start the MIDI track (you can put this in the loadFile callback)
+        /* MIDI.Player.resume(); // resume the MIDI track from pause.
+            MIDI.Player.pause(); // pause the MIDI track.
+            MIDI.Player.stop();*/
+    },
+    function() {
+        console.log("Generating MIDI file.");
+    },
+    function() {
+        console.log("Error generating MIDI file.");
+    }); // load .MIDI from base64 or binary XML request.
+
+    //DonwloadFile
+    var a = document.createElement('a');
+    a.download = 'sample.mid';
+    a.href = base64String;
+    a.click();
+}
+
+
+var generateMidi = false;
+//var generateMidi = true;
+setTimeout(function(){generateMidi = true;}, 5000);
+function isTime() {
+    return generateMidi;
+}
+
 /**
- * When invoque iterate over all registered hands and for each of this hands if
+ * When invoke iterate over all registered hands and for each of this hands if
  * it has a toned assigned plays this tones and marks it as played.
  * @return {Boolean}        True if tones are able to be played, false otherwise.
  */
 function processTones() {
     if(!midiStreamerLoaded) return false;
 
+    if(isRecording() && !isTime()) record(handArray);
+    else if(isTime()) generateMidiFile();
+
     for(var i = 0; i < handArray.length; ++i) {
         console.log("PLAYING TONE: " + handArray[i].currentTone);
-        if(handArray[i].currentTone) {
+        if(handArray[i].currentTone !== null) {
             MIDI.programChange(
                 handArray[i].channel, 
                 INSTRUMENT_LIST[handArray[i].instrumentIndex].id);
