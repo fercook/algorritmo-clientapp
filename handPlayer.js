@@ -7,6 +7,8 @@
 var INTERVAL_TIME = 300;
 var TEMPO = 200; //beats per minute.
 
+var INSTRUMENT_PER_HAND = 5;
+
 //How hard the note hits, from 0-127.
 var VELOCITY = 200;
 //How long to hold the note, in seconds.
@@ -24,10 +26,10 @@ var recordEnabled = true;
  * This is an array of arrays. Each sub-array corresponds to one instrument and 
  * hand.
  * We use 8 channels for each hand. We suppose both hands use the same instruments.
- * So left hand will use 0 to 7 channels and right hand will use 8 to 15. 
+ * So left hand will use 0 to 4 channels and right hand will use 5 to 9. 
  * @type {Array}
  */
-var recordingArray = new Array(16);
+var recordingArray = new Array(INSTRUMENT_PER_HAND*2);
 
 function onsuccess() {
     midiStreamerLoaded = true;
@@ -54,9 +56,7 @@ function applyCurrentTone(recordingArrayIndex, tone) {
     if(!recordingArray[recordingArrayIndex]) recordingArray[recordingArrayIndex] = [];
     
     var currentInsArray = recordingArray[recordingArrayIndex];
-    var lastNote = currentInsArray[currentInsArray.length-1];
-    if(lastNote && lastNote.id == tone) ++lastNote.numTimes;
-    else currentInsArray[currentInsArray.length] = {id: tone, numTimes:1};
+    currentInsArray[currentInsArray.length] = {id: tone, numTimes:1};
 }
 
 /**
@@ -68,9 +68,7 @@ function addSilence(recordingArrayIndex) {
     if(!recordingArray[recordingArrayIndex]) recordingArray[recordingArrayIndex] = [];
 
     var currentInsArray = recordingArray[recordingArrayIndex];
-    var lastNote = currentInsArray[currentInsArray.length-1];
-    if(lastNote && lastNote.id == -1) ++lastNote.numTimes;
-    else currentInsArray[currentInsArray.length] = {id: -1, numTimes:1};
+    currentInsArray[currentInsArray.length] = {id: -1, numTimes:1};
 }
 
 /**
@@ -85,7 +83,7 @@ function record(hands) {
     for(var i = 0; i < recordingArray.length; ++i) {
         if(lHand !== null && i == hands[lHand].instrumentIndex) 
             applyCurrentTone(i, hands[lHand].currentTone);
-        if(rHand !== null && i == hands[rHand].instrumentIndex + 8) 
+        else if(rHand !== null && i == hands[rHand].instrumentIndex + INSTRUMENT_PER_HAND) 
             applyCurrentTone(i, hands[rHand].currentTone);
         else addSilence(i);
     }
@@ -107,22 +105,44 @@ MIDI.loadPlugin({
 });
 
 function fillTrakWithArray(track, trackArray) {
-    for(var i = 0; i < trackArray.length; ++i) {
-        var channel = i;
-        for(var j = 0; j < trackArray[i].length; ++j) {
+    var modifiedTrack = track;
+    for(var j = 0; j < trackArray[0].length; ++j) {
+        var firstNote = false;
+        for(var i = 0; i < trackArray.length; ++i) {
+            var channel = i;
+        
             var tone = trackArray[i][j].id;
-            var wait = trackArray[i][j-1] && trackArray[i][j-1].id == -1 ? trackArray[i][j-1].numTimes*72 : 0;
-            if(tone !== -1)
-                while(trackArray[i][j].numTimes > 0) {
-                    track.addNoteOn(channel, FIRST_NOTE_ID + tone, 0, VELOCITY);
-                    track.addNoteOff(channel, FIRST_NOTE_ID + tone, 72, VELOCITY);
-                    //128 is one quarter of note, one beat.
-                    --trackArray[i][j].numTimes;
-                }
+            var time, wait;
+            if(tone !== -1) {
+                time = 72;
+                wait = 0;
+                if(!firstNote)
+                    modifiedTrack = modifiedTrack.noteOn(channel, FIRST_NOTE_ID + tone, wait);
+                else modifiedTrack = modifiedTrack.noteOn(channel, FIRST_NOTE_ID + tone);
+                firstNote = true;
+            }
+            //128 is one quarter of note, one beat.
         }
-       trackArray[i]
+        var firstNote = false;
+        for(var i = 0; i < trackArray.length; ++i) {
+            var channel = i;
+        
+            var tone = trackArray[i][j].id;
+            var time, wait;
+            if(tone !== -1) {
+                time = 72;
+                wait = 0;
+                if(!firstNote)
+                    modifiedTrack = modifiedTrack.noteOff(channel, FIRST_NOTE_ID + tone, time);
+                else modifiedTrack = modifiedTrack.noteOff(channel, FIRST_NOTE_ID + tone);
+                firstNote = true;
+            }
+        }
+        if(!firstNote) {
+            modifiedTrack = modifiedTrack.noteOn(channel, FIRST_NOTE_ID + tone, 72);
+            modifiedTrack = modifiedTrack.noteOff(channel, FIRST_NOTE_ID + tone, 0);
+        }
     }
-
 }
 
 //generateMidiFile();
@@ -139,7 +159,7 @@ function generateMidiFile() {
 
     for(var i = 0; i < INSTRUMENT_LIST.length; ++i) {
         track.setInstrument(i, INSTRUMENT_LIST[i].id);
-        track.setInstrument(i+8, INSTRUMENT_LIST[i].id);
+        track.setInstrument(i+INSTRUMENT_PER_HAND, INSTRUMENT_LIST[i].id);
     }
 
     //TODO: Erase.
@@ -162,7 +182,7 @@ function generateMidiFile() {
 
     MIDI.Player.loadFile(base64String, function() {
         console.log("MIDI file generated.");
-        MIDI.Player.start(); // start the MIDI track (you can put this in the loadFile callback)
+        //MIDI.Player.start(); // start the MIDI track (you can put this in the loadFile callback)
         /* MIDI.Player.resume(); // resume the MIDI track from pause.
             MIDI.Player.pause(); // pause the MIDI track.
             MIDI.Player.stop();*/
@@ -184,7 +204,7 @@ function generateMidiFile() {
 
 var generateMidi = false;
 //var generateMidi = true;
-setTimeout(function(){generateMidi = true;}, 5000);
+setTimeout(function(){generateMidi = true;}, 10000);
 function isTime() {
     return generateMidi;
 }
