@@ -9,6 +9,8 @@ var TEMPO = 200; //beats per minute.
 
 var INSTRUMENT_PER_HAND = 5;
 
+var NUM_TONES_PATTERN = 20;
+
 //How hard the note hits, from 0-127.
 var VELOCITY = 200;
 //How long to hold the note, in seconds.
@@ -20,6 +22,17 @@ var FIRST_NOTE_ID = 21;
 var midiStreamerLoaded = false;
 
 var recordEnabled = true;
+
+//Contains the pattern being generated currently.
+var currentPatternArray = new Array(INSTRUMENT_PER_HAND*2);
+
+//Are we recording a pattern right now?
+var patternRecordingEnabled = true;
+
+/**
+ * Array with active patterns.
+ */
+var activePatterns = [];
 
 /**
  * Contains information about a recorded track.
@@ -52,11 +65,11 @@ function getFirstHandWithType(hands, type) {
  * @param  {[type]} instrumentIndex [description]
  * @param  {[type]} tone            [description]
  */
-function applyCurrentTone(recordingArrayIndex, tone) {
-    if(!recordingArray[recordingArrayIndex]) recordingArray[recordingArrayIndex] = [];
+function applyCurrentTone(recordingArrayIndex, tone, destArray) {
+    if(!destArray[recordingArrayIndex]) destArray[recordingArrayIndex] = [];
     
-    var currentInsArray = recordingArray[recordingArrayIndex];
-    currentInsArray[currentInsArray.length] = {id: tone, numTimes:1};
+    var currentInsArray = destArray[recordingArrayIndex];
+    currentInsArray[currentInsArray.length] = {tones: [tone], numTimes:1};
 }
 
 /**
@@ -64,11 +77,30 @@ function applyCurrentTone(recordingArrayIndex, tone) {
  * When our system plays a sound, each channel that is not sounding 
  * at this moment should have a silence. 
  */
-function addSilence(recordingArrayIndex) {
-    if(!recordingArray[recordingArrayIndex]) recordingArray[recordingArrayIndex] = [];
+function addSilence(recordingArrayIndex, destArray) {
+    if(!destArray[recordingArrayIndex]) destArray[recordingArrayIndex] = [];
 
-    var currentInsArray = recordingArray[recordingArrayIndex];
-    currentInsArray[currentInsArray.length] = {id: -1, numTimes:1};
+    var currentInsArray = destArray[recordingArrayIndex];
+    currentInsArray[currentInsArray.length] = {tones: [-1], numTimes:1};
+}
+
+function enablePatternRecording() {
+    patternRecordingEnabled = true;
+    activePatterns[activePatterns.length] = {index: -1, pattern: currentPatternArray};
+    currentPatternArray = new Array(INSTRUMENT_PER_HAND*2);
+}
+
+
+function recordPattern(hands) {
+    if(currentPatternArray[0] && currentPatternArray[0].length >= NUM_TONES_PATTERN) {
+        patternRecordingEnabled = false;
+        setTimeout(enablePatternRecording, 10000);
+    }
+
+    if(patternRecordingEnabled) {
+        if(currentPatternArray === null) currentPatternArray = [];
+        record(hands, currentPatternArray);
+    }
 }
 
 /**
@@ -76,16 +108,16 @@ function addSilence(recordingArrayIndex) {
  * @param  {[Array]} hands array of hands. We support just two hands (one right 
  * and one left) if more are provident they will be ignored.
  */
-function record(hands) {
+function record(hands, destArray) {
     var lHand = getFirstHandWithType(hands, "left");
     var rHand = getFirstHandWithType(hands, "right");
 
     for(var i = 0; i < recordingArray.length; ++i) {
         if(lHand !== null && i == hands[lHand].instrumentIndex) 
-            applyCurrentTone(i, hands[lHand].currentTone);
+            applyCurrentTone(i, hands[lHand].currentTone, destArray);
         else if(rHand !== null && i == hands[rHand].instrumentIndex + INSTRUMENT_PER_HAND) 
-            applyCurrentTone(i, hands[rHand].currentTone);
-        else addSilence(i);
+            applyCurrentTone(i, hands[rHand].currentTone, destArray);
+        else addSilence(i, destArray);
     }
 }
 
@@ -104,43 +136,48 @@ MIDI.loadPlugin({
     },
 });
 
-function fillTrakWithArray(track, trackArray) {
+/**
+ * Given a channel, track and array of tones, add this tones to this track on
+ * this channels. When a tone is -1 this is a silence, so we add nothing.
+ * If all tones are silence we return false, otherwise we return true (tones added).
+ * noteOn determines if we are indicating the start of a note or the end.
+ */
+function addTonesToTrack(track, tones, channel, noteOn) {
+    var time=72;
+    var wait = 0;
+    
+    var isSilence = true;
+    for(var i = 0; i < tones.length; ++i) {
+        if(tones[i] !== -1) {  
+            if(noteOn) {
+                //If first note.
+                if(isSilence) track.noteOn(channel, FIRST_NOTE_ID + tone, wait);
+                else track.noteOn(channel, FIRST_NOTE_ID + tone);
+            }
+            else {
+                track.noteOff(channel, FIRST_NOTE_ID + tone, time);
+                //If first note.
+                if(isSilence) track.noteOff(channel, FIRST_NOTE_ID + tone, time);
+                else track.noteOff(channel, FIRST_NOTE_ID + tone);
+            }
+             isSilence = false;
+        }
+    }
+    return !isSilence;
+}
+
+function fillTrackWithArray(track, trackArray) {
     var modifiedTrack = track;
     for(var j = 0; j < trackArray[0].length; ++j) {
-        var firstNote = false;
-        for(var i = 0; i < trackArray.length; ++i) {
-            var channel = i;
+        var areTones = false;
+        for(var i = 0; i < trackArray.length; ++i) 
+            areTones = addTonesToTrack(track, trackArray[i][j].tones, i, true) || areTones;
+        for(var i = 0; i < trackArray.length; ++i) 
+            areTones = addTonesToTrack(track, trackArray[i][j].tones, i, true) || areTones;
         
-            var tone = trackArray[i][j].id;
-            var time, wait;
-            if(tone !== -1) {
-                time = 72;
-                wait = 0;
-                if(!firstNote)
-                    modifiedTrack = modifiedTrack.noteOn(channel, FIRST_NOTE_ID + tone, wait);
-                else modifiedTrack = modifiedTrack.noteOn(channel, FIRST_NOTE_ID + tone);
-                firstNote = true;
-            }
-            //128 is one quarter of note, one beat.
-        }
-        var firstNote = false;
-        for(var i = 0; i < trackArray.length; ++i) {
-            var channel = i;
-        
-            var tone = trackArray[i][j].id;
-            var time, wait;
-            if(tone !== -1) {
-                time = 72;
-                wait = 0;
-                if(!firstNote)
-                    modifiedTrack = modifiedTrack.noteOff(channel, FIRST_NOTE_ID + tone, time);
-                else modifiedTrack = modifiedTrack.noteOff(channel, FIRST_NOTE_ID + tone);
-                firstNote = true;
-            }
-        }
-        if(!firstNote) {
-            modifiedTrack = modifiedTrack.noteOn(channel, FIRST_NOTE_ID + tone, 72);
-            modifiedTrack = modifiedTrack.noteOff(channel, FIRST_NOTE_ID + tone, 0);
+        if(!areTones) {
+            track.noteOn(channel, FIRST_NOTE_ID + tone, 72);
+            track.noteOff(channel, FIRST_NOTE_ID + tone, 0);
         }
     }
 }
@@ -153,7 +190,7 @@ function generateMidiFile() {
 
     var file = new Midi.File();
     var track = new Midi.Track();
-    file.addTrack(track)
+    file.addTrack(track);
 
     track.setTempo(TEMPO);
 
@@ -166,8 +203,8 @@ function generateMidiFile() {
     //fakeArray = [];
     //fakeArray[fakeArray.length] = [{id: 21, numTimes:2000}];
 
-    fillTrakWithArray(track, recordingArray);
-    //fillTrakWithArray(track, fakeArray);
+    fillTrackWithArray(track, recordingArray);
+    //fillTrackWithArray(track, fakeArray);
 
     var str = file.toBytes();
     var bytes = [];
@@ -201,12 +238,43 @@ function generateMidiFile() {
     a.click();
 }
 
+function recordActivePatterns(recordingArray) {
+    for(var i = 0; i < activePatterns.length; ++i) {
+        var activePattern = activePatterns[i];
+        
+        for(var j = 0; j < INSTRUMENT_PER_HAND*2; ++j) {
+            var cIndex = ++activePattern.index % NUM_TONES_PATTERN;
+            recordingArray[j][recordingArray[j].length-1].tones = 
+                recordingArray[j][recordingArray[j].length-1].tones.concat(
+                    activePattern.pattern[j][cIndex]);
+        }
+    }
+}
 
-var generateMidi = false;
-//var generateMidi = true;
-setTimeout(function(){generateMidi = true;}, 10000);
-function isTime() {
-    return generateMidi;
+function moveActivePatternsForward() {
+    for(var i = 0; i < activePatterns.length; ++i) {
+        activePatterns[i].index = ++activePatterns[i].index % NUM_TONES_PATTERN;
+    }
+}
+
+function playActivePatterns() {
+    for(var i = 0; i < activePatterns.length; ++i) {
+        var activePattern = activePatterns[i];
+        cIndex = ++activePattern.index % NUM_TONES_PATTERN;
+        for(var j = 0; j < INSTRUMENT_PER_HAND*2; ++j) {
+            var tones = activePattern.pattern[j][cIndex].tones;
+            for(var k= 0; k < tones-length; ++k) {
+                playTone(tones[k], j, INSTRUMENT_LIST[j%INSTRUMENT_PER_HAND].id);
+            }
+        }
+    }
+}
+
+
+function playTone(tone, channel, instrument) {
+    MIDI.programChange(channel, instrument);
+    MIDI.noteOn(channel, tone, VELOCITY);
+    MIDI.noteOff(channel, tone, DELAY);
 }
 
 /**
@@ -217,21 +285,24 @@ function isTime() {
 function processTones() {
     if(!midiStreamerLoaded) return false;
 
-    if(isRecording() && !isTime()) record(handArray);
-    else if(isTime()) generateMidiFile();
+    if(isRecording()) {
+        record(handArray, recordingArray);
+        recordActivePatterns(recordingArray);
+    }
+
+    recordPattern(handArray);
 
     for(var i = 0; i < handArray.length; ++i) {
         console.log("PLAYING TONE: " + handArray[i].currentTone);
         if(handArray[i].currentTone !== null) {
-            MIDI.programChange(
-                handArray[i].channel, 
-                INSTRUMENT_LIST[handArray[i].instrumentIndex].id);
-            MIDI.noteOn(handArray[i].channel, FIRST_NOTE_ID + handArray[i].currentTone, VELOCITY)
-            MIDI.noteOff(handArray[i].channel, FIRST_NOTE_ID + handArray[i].currentTone, DELAY)
+            playTone(FIRST_NOTE_ID + handArray[i].currentTone, handArray[i].channel, INSTRUMENT_LIST[handArray[i].instrumentIndex].id);
 
             handArray[i].currentTone = null;
         }
     }
+
+    playActivePatterns();
+    moveActivePatternsForward();
 
     return true;
 }
