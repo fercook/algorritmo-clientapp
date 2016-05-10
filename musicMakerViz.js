@@ -1,5 +1,8 @@
 var CIRCLE_RADIUS = 20;
 
+//Constant containing render time.
+var RENDER_INTERVAL_TIME = 300;
+
 function adjustSVGArea() {
     d3.select(".svg-tag").remove();
 
@@ -18,6 +21,39 @@ function adjustSVGArea() {
 }
 adjustSVGArea();
 window.addEventListener("resize", adjustSVGArea);
+
+
+/**
+ * Print the bar which informs in what state of pattern recording we are.
+ * We could be in the middle of a pattern record or in the finished state when
+ * we can decide to add this pattern.
+ */
+function printPattern() {
+    d3.select(".pattern-bar-completed").remove();
+    d3.select(".pattern-bar-uncompleted").remove();
+
+    var percentage = patternRecordingEnabled && currentPatternArray[0] ? (currentPatternArray[0].length*100/NUM_TONES_PATTERN) : (!patternRecordingEnabled ? 100 : 0);
+
+    var barMargin = 25;
+    var height = 40;
+    var weightPerc = 10;
+    var width = window.innerWidth * weightPerc/100;
+    d3.select(".svg-tag").append("rect")
+        .attr("class", "pattern-bar-completed")
+        .attr("x", barMargin)
+        .attr("y", window.innerHeight-barMargin-height)
+        .attr("width", width*percentage/100 + "px")
+        .attr("height", height + "px")
+        .style("fill", patternRecordingEnabled ? "black" : "red");
+
+    d3.select(".svg-tag").append("rect")
+        .attr("class", "pattern-bar-uncompleted")
+        .attr("x", (barMargin + width*percentage/100) + "px")
+        .attr("y", window.innerHeight-barMargin-height)
+        .attr("width", width*(100-percentage)/100 + "px")
+        .attr("height", height + "px")
+        .style("fill", "white");
+}
 
 /**
  * In charge of printing the zone where there are no sound.
@@ -126,3 +162,40 @@ function updateHandOnScreen(handFrame, handState) {
 
     drawSpeechBallon(handFrame.id, left*window.innerWidth/100, (100 - top)*window.innerHeight/100, INSTRUMENT_LIST[handState.instrumentIndex].name);
 }
+
+
+/**
+ * When invoke iterate over all registered hands and for each of this hands if
+ * it has a toned assigned plays this tones and marks it as played.
+ * @return {Boolean}        True if tones are able to be played, false otherwise.
+ */
+function processTones() {
+    if(!midiStreamerLoaded) return false;
+
+    if(isRecording()) {
+        record(handArray, recordingArray);
+        recordActivePatterns(recordingArray);
+    }
+
+    recordPattern(handArray);
+
+    for(var i = 0; i < handArray.length; ++i) {
+        console.log("PLAYING TONE: " + handArray[i].currentTone);
+        if(handArray[i].currentTone !== null) {
+            playTone(FIRST_NOTE_ID + handArray[i].currentTone, handArray[i].channel, INSTRUMENT_LIST[handArray[i].instrumentIndex].id);
+
+            handArray[i].currentTone = null;
+        }
+    }
+
+    playActivePatterns();
+    moveActivePatternsForward();
+
+    return true;
+}
+
+function render() {
+    printPattern();
+}
+
+setInterval(render, RENDER_INTERVAL_TIME);

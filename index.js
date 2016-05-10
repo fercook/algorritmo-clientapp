@@ -207,12 +207,19 @@ function isOnPlayingZone(palmWidth) {
   return true;
 }
 
+function isFlippingHand(handFrame, previousFrame) {
+    if(handFrame.type === "left")
+        return handFrame.rotationAxis(previousFrame, 2)[2] <= -0.7;
+    else 
+        return handFrame.rotationAxis(previousFrame, 2)[2] >= 0.7;
+}
+
 /**
  * When we get information about an specific hand, process it.
  * @param  {[type]} handFrame json containing a frame information of a specific 
  *                            hand, provided by the leap motion library.
  */
-function processHand(handFrame) {
+function processHand(handFrame, previousFrame) {
     //Get json with current state.
     var handState = getHandState(handFrame.id);
 
@@ -235,6 +242,11 @@ function processHand(handFrame) {
         else if(!isPinching(handFrame)) markAsNonPinching(handState);
     }
 
+    if(isFlippingHand(handFrame, previousFrame)) {
+        console.log("Hand flipped!!!");
+        activateCurrentPattern();
+    }
+
     updateHandOnScreen(handFrame, handState);
 }
 
@@ -245,7 +257,7 @@ Leap.loop(controllerOptions, function(frame) {
   }
 
   for(var i = 0; i < frame.hands.length; ++i) {
-      processHand(frame.hands[i]);
+      processHand(frame.hands[i], previousFrame);
   }
 
   var handOutput = document.getElementById("handData");

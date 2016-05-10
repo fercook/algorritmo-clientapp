@@ -9,7 +9,7 @@ var TEMPO = 200; //beats per minute.
 
 var INSTRUMENT_PER_HAND = 5;
 
-var NUM_TONES_PATTERN = 20;
+var NUM_TONES_PATTERN = 10;
 
 //How hard the note hits, from 0-127.
 var VELOCITY = 200;
@@ -33,6 +33,8 @@ var patternRecordingEnabled = true;
  * Array with active patterns.
  */
 var activePatterns = [];
+
+var timeoutId = undefined;
 
 /**
  * Contains information about a recorded track.
@@ -84,17 +86,31 @@ function addSilence(recordingArrayIndex, destArray) {
     currentInsArray[currentInsArray.length] = {tones: [-1], numTimes:1};
 }
 
+/**
+ * Takes the pattern that was just generated and adds it to the array of active 
+ * patterns which will be played in loop.
+ * Then order to start recording a new pattern.
+ */
+function activateCurrentPattern() {
+    if(!patternRecordingEnabled) {
+        activePatterns[activePatterns.length] = {index: -1, pattern: currentPatternArray};
+        if(timeoutId) clearTimeout(timeoutId);
+        enablePatternRecording();
+    }
+}
+
 function enablePatternRecording() {
-    activePatterns[activePatterns.length] = {index: -1, pattern: currentPatternArray};
-    currentPatternArray = new Array(INSTRUMENT_PER_HAND*2);
-    patternRecordingEnabled = true;
+    if(!patternRecordingEnabled) {
+        currentPatternArray = new Array(INSTRUMENT_PER_HAND*2);
+        patternRecordingEnabled = true;
+    }
 }
 
 
 function recordPattern(hands) {
     if(patternRecordingEnabled && currentPatternArray[0] && currentPatternArray[0].length >= NUM_TONES_PATTERN) {
         patternRecordingEnabled = false;
-        setTimeout(enablePatternRecording, 10000);
+        timeoutId = setTimeout(enablePatternRecording, 4000);
     }
 
     if(patternRecordingEnabled) {

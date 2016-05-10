@@ -1,5 +1,6 @@
 body {
     background-color: #58201D;
+    overflow:hidden;
 }
 
 #svg-container {
