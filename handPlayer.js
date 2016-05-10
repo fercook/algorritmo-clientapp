@@ -85,14 +85,14 @@ function addSilence(recordingArrayIndex, destArray) {
 }
 
 function enablePatternRecording() {
-    patternRecordingEnabled = true;
     activePatterns[activePatterns.length] = {index: -1, pattern: currentPatternArray};
     currentPatternArray = new Array(INSTRUMENT_PER_HAND*2);
+    patternRecordingEnabled = true;
 }
 
 
 function recordPattern(hands) {
-    if(currentPatternArray[0] && currentPatternArray[0].length >= NUM_TONES_PATTERN) {
+    if(patternRecordingEnabled && currentPatternArray[0] && currentPatternArray[0].length >= NUM_TONES_PATTERN) {
         patternRecordingEnabled = false;
         setTimeout(enablePatternRecording, 10000);
     }
@@ -243,7 +243,7 @@ function recordActivePatterns(recordingArray) {
         var activePattern = activePatterns[i];
         
         for(var j = 0; j < INSTRUMENT_PER_HAND*2; ++j) {
-            var cIndex = ++activePattern.index % NUM_TONES_PATTERN;
+            var cIndex = (activePattern.index + 1) % NUM_TONES_PATTERN;
             recordingArray[j][recordingArray[j].length-1].tones = 
                 recordingArray[j][recordingArray[j].length-1].tones.concat(
                     activePattern.pattern[j][cIndex]);
@@ -253,14 +253,14 @@ function recordActivePatterns(recordingArray) {
 
 function moveActivePatternsForward() {
     for(var i = 0; i < activePatterns.length; ++i) {
-        activePatterns[i].index = ++activePatterns[i].index % NUM_TONES_PATTERN;
+        activePatterns[i].index = (activePatterns[i].index + 1) % NUM_TONES_PATTERN;
     }
 }
 
 function playActivePatterns() {
     for(var i = 0; i < activePatterns.length; ++i) {
         var activePattern = activePatterns[i];
-        cIndex = ++activePattern.index % NUM_TONES_PATTERN;
+        cIndex = (activePattern.index + 1) % NUM_TONES_PATTERN;
         for(var j = 0; j < INSTRUMENT_PER_HAND*2; ++j) {
             var tones = activePattern.pattern[j][cIndex].tones;
             for(var k= 0; k < tones-length; ++k) {

@@ -11,11 +11,34 @@ function adjustSVGArea() {
     svg.append("g").attr("class", "circle-container");
     svg.append("g").attr("class", "tail-container");
 
+    printSafeZone();
+
     printLines(NUMBER_OF_OCTAVES*NUMBER_OF_SEMITONES, window.innerWidth, window.innerHeight);
     svg.append("g").attr("class", "speech-ballons");
 }
 adjustSVGArea();
 window.addEventListener("resize", adjustSVGArea);
+
+/**
+ * In charge of printing the zone where there are no sound.
+ */
+function printSafeZone() {
+    var marginPercent = Math.max(NO_TONE_MARGIN, 0)*100/(maxValidWidth-minValidWidth);  
+    var marginInPixels = marginPercent*window.innerWidth/100;
+    d3.select(".svg-tag").append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", marginInPixels + "px")
+        .attr("height", window.innerHeight + "px")
+        .style("fill", "#BB3E4F");
+
+    d3.select(".svg-tag").append("rect")
+        .attr("x", (window.innerWidth - marginInPixels) + "px")
+        .attr("y", 0)
+        .attr("width", marginInPixels + "px")
+        .attr("height", window.innerHeight + "px")
+        .style("fill", "#BB3E4F");
+}
 
 /**
  * Print numLines horizontal lines simulating a pentagram. Those lines are 

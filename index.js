@@ -6,6 +6,13 @@ MAX_HEIGHT = 400;
 MIN_WIDTH = -150;
 MAX_WIDTH = 150;
 
+//Margin on each side reserved to the non-tone zone.
+//This is a zone in which there is no tone played even if we are using the gesture
+//to play tones.
+//This allows the user to stop and continue playing a tone very fast, without changing
+//the playing gesture.
+NO_TONE_MARGIN = 50;
+
 //Variables containing the palm height range accepted as a input. 
 //This range will depend on the screen aspect ratio, defining this way a better 
 //user experience.
@@ -189,6 +196,18 @@ function changeToNextIntrument(handType, handState) {
 }
 
 /**
+ * Returns true if the user have its hand into the playing zone. False
+ * if this hand is in non-tone zone.
+ * @param  {[int]}  palmWidth Width at which the user has the processed hand.
+ * @return {Boolean}  
+ */
+function isOnPlayingZone(palmWidth) {
+  if(palmWidth < MIN_WIDTH + NO_TONE_MARGIN || 
+    palmWidth > MAX_WIDTH - NO_TONE_MARGIN) return false;
+  return true;
+}
+
+/**
  * When we get information about an specific hand, process it.
  * @param  {[type]} handFrame json containing a frame information of a specific 
  *                            hand, provided by the leap motion library.
@@ -200,10 +219,11 @@ function processHand(handFrame) {
     if(handState === undefined) var handState = addHand(handFrame);
 
     var palmHeight = handFrame.palmPosition[1];
+    var palmWidth = handFrame.palmPosition[0];
     
     //When grabbing the user is playing a tone.
     //Otherwise no tone is played.
-    if(isGrabbing(handFrame)) {
+    if(isGrabbing(handFrame) && isOnPlayingZone(palmWidth)) {
         var tone = getTone(palmHeight);
         handState.currentTone = tone;
     }
