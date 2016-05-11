@@ -171,10 +171,13 @@ MIDI.loadPlugin({
  * this channels. When a tone is -1 this is a silence, so we add nothing.
  * If all tones are silence we return false, otherwise we return true (tones added).
  * noteOn determines if we are indicating the start of a note or the end.
+ *
+ * wait is how much time we want to wait before playing the current note. 
+ * (only when noteOn is true).
  */
-function addTonesToTrack(track, tones, channel, noteOn) {
-    var time=72;
-    var wait = 0;
+function addTonesToTrack(track, tones, channel, noteOn, wait) {
+    var time = 128;
+    wait = wait || 0;
     
     var isSilence = true;
     for(var i = 0; i < tones.length; ++i) {
@@ -185,7 +188,6 @@ function addTonesToTrack(track, tones, channel, noteOn) {
                 else track.noteOn(channel, FIRST_NOTE_ID + tones[i]);
             }
             else {
-                track.noteOff(channel, FIRST_NOTE_ID + tones[i], time);
                 //If first note.
                 if(isSilence) track.noteOff(channel, FIRST_NOTE_ID + tones[i], time);
                 else track.noteOff(channel, FIRST_NOTE_ID + tones[i]);
@@ -198,17 +200,16 @@ function addTonesToTrack(track, tones, channel, noteOn) {
 
 function fillTrackWithArray(track, trackArray) {
     var modifiedTrack = track;
+    var wait = 0;
     for(var j = 0; trackArray[0] && j < trackArray[0].length; ++j) {
         var areTones = false;
         for(var i = 0; i < trackArray.length; ++i) 
-            areTones = addTonesToTrack(track, trackArray[i][j].tones, i, true) || areTones;
+            areTones = addTonesToTrack(track, trackArray[i][j].tones, i, true, wait) || areTones;
         for(var i = 0; i < trackArray.length; ++i) 
-            areTones = addTonesToTrack(track, trackArray[i][j].tones, i, true) || areTones;
+            areTones = addTonesToTrack(track, trackArray[i][j].tones, i, false) || areTones;
         
-        if(!areTones) {
-            track.noteOn(i, FIRST_NOTE_ID, 72);
-            track.noteOff(i, FIRST_NOTE_ID, 0);
-        }
+        if(!areTones) wait += 128;
+        else wait = 0;
     }
 }
 
