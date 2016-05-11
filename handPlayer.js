@@ -161,7 +161,7 @@ HandPlayer.isRecording = function() {
 //Load Midi streamer
 MIDI.loadPlugin({
     soundfontUrl: "./soundfonts/",
-    instruments: _.map(INSTRUMENT_LIST, function(item){return item.name;}),
+    instruments: _.map(LeapManager.INSTRUMENT_LIST, function(item){return item.name;}),
     onsuccess: onsuccess,
     onprogress: function(state, progress) {
         console.log(state, progress);
@@ -225,9 +225,9 @@ HandPlayer.generateMidiFile = function() {
 
     track.setTempo(this.TEMPO);
 
-    for(var i = 0; i < INSTRUMENT_LIST.length; ++i) {
-        track.setInstrument(i, INSTRUMENT_LIST[i].id);
-        track.setInstrument(i+HandPlayer.INSTRUMENT_PER_HAND, INSTRUMENT_LIST[i].id);
+    for(var i = 0; i < LeapManager.INSTRUMENT_LIST.length; ++i) {
+        track.setInstrument(i, LeapManager.INSTRUMENT_LIST[i].id);
+        track.setInstrument(i+HandPlayer.INSTRUMENT_PER_HAND, LeapManager.INSTRUMENT_LIST[i].id);
     }
 
     //TODO: Erase.
@@ -295,7 +295,7 @@ HandPlayer.playActivePatterns = function() {
         for(var j = 0; j < HandPlayer.INSTRUMENT_PER_HAND*2; ++j) {
             var tones = activePattern.pattern[j][cIndex].tones;
             for(var k= 0; k < tones-length; ++k) {
-                this.playTone(HandPlayer.FIRST_NOTE_ID + tones[k], j, INSTRUMENT_LIST[j%HandPlayer.INSTRUMENT_PER_HAND].id);
+                this.playTone(HandPlayer.FIRST_NOTE_ID + tones[k], j, LeapManager.INSTRUMENT_LIST[j%HandPlayer.INSTRUMENT_PER_HAND].id);
             }
         }
     }
@@ -317,18 +317,18 @@ HandPlayer.processTones = function() {
     if(!this.midiStreamerLoaded) return false;
 
     if(this.isRecording()) {
-        this.record(handArray, this.recordingArray);
+        this.record(LeapManager.handArray, this.recordingArray);
         this.recordActivePatterns(this.recordingArray);
     }
 
-    this.recordPattern(handArray);
+    this.recordPattern(LeapManager.handArray);
 
-    for(var i = 0; i < handArray.length; ++i) {
-        console.log("PLAYING TONE: " + handArray[i].currentTone);
-        if(handArray[i].currentTone !== null) {
-            this.playTone(HandPlayer.FIRST_NOTE_ID + handArray[i].currentTone, handArray[i].channel, INSTRUMENT_LIST[handArray[i].instrumentIndex].id);
+    for(var i = 0; i < LeapManager.handArray.length; ++i) {
+        console.log("PLAYING TONE: " + LeapManager.handArray[i].currentTone);
+        if(LeapManager.handArray[i].currentTone !== null) {
+            this.playTone(HandPlayer.FIRST_NOTE_ID + LeapManager.handArray[i].currentTone, LeapManager.handArray[i].channel, LeapManager.INSTRUMENT_LIST[LeapManager.handArray[i].instrumentIndex].id);
 
-            handArray[i].currentTone = null;
+            LeapManager.handArray[i].currentTone = null;
         }
     }
 

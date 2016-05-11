@@ -1,46 +1,48 @@
+var LeapManager = {};
+
 //Constants containing the palm height range that leap motion is able to recognize.
-MIN_HEIGHT = 80;
-MAX_HEIGHT = 400;
+LeapManager.MIN_HEIGHT = 80;
+LeapManager.MAX_HEIGHT = 400;
 
 //Constants containing the palm width range that leap motion is able to recognize.
-MIN_WIDTH = -150;
-MAX_WIDTH = 150;
+LeapManager.MIN_WIDTH = -150;
+LeapManager.MAX_WIDTH = 150;
 
 //Margin on each side reserved to the non-tone zone.
 //This is a zone in which there is no tone played even if we are using the gesture
 //to play tones.
 //This allows the user to stop and continue playing a tone very fast, without changing
 //the playing gesture.
-NO_TONE_MARGIN = 50;
+LeapManager.NO_TONE_MARGIN = 50;
 
 //Variables containing the palm height range accepted as a input. 
 //This range will depend on the screen aspect ratio, defining this way a better 
 //user experience.
-var minValidWidth = MIN_WIDTH;
-var maxValidWidth = MAX_WIDTH;
+LeapManager.minValidWidth = LeapManager.MIN_WIDTH;
+LeapManager.maxValidWidth = LeapManager.MAX_WIDTH;
 
 //Variables containing the palm width range accepted as a input. 
 //This range will depend on the screen aspect ratio, defining this way a better 
 //user experience.
-var minValidHeight = MIN_HEIGHT;
-var maxValidHeight = MAX_HEIGHT;
+LeapManager.minValidHeight = LeapManager.MIN_HEIGHT;
+LeapManager.maxValidHeight = LeapManager.MAX_HEIGHT;
 
 //Constants containing threshold at which a gesture starts being identified as valid.
 //The leap motion library provides a percentage indicating how possible it's the user
 //to be doing a specific gesture. This rate goes from 0 to 1.
-GRAB_THRESHOLD = 0.8;
-PINCH_THRESHOLD = 0.6;
+LeapManager.GRAB_THRESHOLD = 0.8;
+LeapManager.PINCH_THRESHOLD = 0.6;
 
-NUMBER_OF_OCTAVES = 7;
-NUMBER_OF_SEMITONES = 12;
+LeapManager.NUMBER_OF_OCTAVES = 7;
+LeapManager.NUMBER_OF_SEMITONES = 12;
 
 //NOTE: Midi notes and semi-notes goes from 0 to 11. And if we want to specify octave, we 
 //      should calculate note + 12 * octave. (octaves goes from 0 to 9, both included).
 //Height of each semitone. There are 12 seminotes * 10 octaves.
-var semitoneHeight = (maxValidHeight-minValidHeight)/(NUMBER_OF_SEMITONES*NUMBER_OF_OCTAVES);
+LeapManager.semitoneHeight = (LeapManager.maxValidHeight-LeapManager.minValidHeight)/(LeapManager.NUMBER_OF_SEMITONES*LeapManager.NUMBER_OF_OCTAVES);
 
 
-INSTRUMENT_LIST = [
+LeapManager.INSTRUMENT_LIST = [
     {id: 0,
      name: "acoustic_grand_piano"},
     {id: 40,
@@ -52,16 +54,16 @@ INSTRUMENT_LIST = [
 ]
 
 //Array, for each hand we'll have an array.
-handArray = [];
+LeapManager.handArray = [];
 
 //This variables will contain the last instrument assign to a left and right
 //hand respectively. And this instrument will be the default one when detecting
 //a new hand. This way we minimize the effect of losing track of a hand.
-leftHandInstrument = 0;
-rightHandInstrument = 0;
+LeapManager.leftHandInstrument = 0;
+LeapManager.rightHandInstrument = 0;
 
 // Store frame for motion functions
-var previousFrame = null;
+LeapManager.previousFrame = null;
 var paused = false;
 var pauseOnGesture = false;
 
@@ -76,42 +78,42 @@ var betweenNotes = false;
  * This area will be the maximum area possible, the one that matches the screen
  * aspect ratio and not exceeds the box limited by (MIN|MAX_WIDTH, MIN|MAX_HEIGHT).
  */
-function adjustLeapValidArea() {
-    var leapWidth = (MAX_WIDTH-MIN_WIDTH);
-    var leapHeight = (MAX_HEIGHT-MIN_HEIGHT);
+LeapManager.adjustLeapValidArea = function() {
+    var leapWidth = (this.MAX_WIDTH-this.MIN_WIDTH);
+    var leapHeight = (this.MAX_HEIGHT-this.MIN_HEIGHT);
     if(window.innerWidth/window.innerHeight >= leapWidth/leapHeight) {
-        minValidWidth = MIN_WIDTH;
-        maxValidWidth = MAX_WIDTH;
+        LeapManager.minValidWidth = LeapManager.MIN_WIDTH;
+        LeapManager.maxValidWidth = LeapManager.MAX_WIDTH;
 
         var leapValidHeight = window.innerHeight*leapWidth/window.innerWidth
         var leapUselessMargin = (leapHeight - leapValidHeight)/2;
-        minValidHeight = MIN_HEIGHT+leapUselessMargin;
-        maxValidHeight = MAX_HEIGHT-leapUselessMargin;
+        this.minValidHeight = this.MIN_HEIGHT+leapUselessMargin;
+        this.maxValidHeight = this.MAX_HEIGHT-leapUselessMargin;
     }
     else {
         var leapValidWidth = window.innerWidth*leapHeight/window.innerHeight
         var leapUselessMargin = (leapWidth - leapValidWidth)/2;
-        minValidWidth = MIN_WIDTH+leapUselessMargin;
-        maxValidWidth = MAX_WIDTH-leapUselessMargin;
+        this.minValidWidth = this.MIN_WIDTH+leapUselessMargin;
+        this.maxValidWidth = this.MAX_WIDTH-leapUselessMargin;
 
-        minValidHeight = MIN_HEIGHT;
-        maxValidHeight = MAX_HEIGHT;
+        this.minValidHeight = this.MIN_HEIGHT;
+        this.maxValidHeight = this.MAX_HEIGHT;
     }
-    semitoneHeight = (maxValidHeight-minValidHeight)/(NUMBER_OF_SEMITONES*NUMBER_OF_OCTAVES);
+    this.semitoneHeight = (this.maxValidHeight-this.minValidHeight)/(this.NUMBER_OF_SEMITONES*this.NUMBER_OF_OCTAVES);
 }
 //Call this method when loading the website.
-adjustLeapValidArea();
-window.addEventListener("resize", adjustLeapValidArea);
+LeapManager.adjustLeapValidArea();
+window.addEventListener("resize", LeapManager.adjustLeapValidArea.bind(LeapManager));
 
 /**
  * Maps palm height to a tone.
  * @param  {float} palmHeight height at which the user placed its palm.
  * @return {int}            tone this height maps to.
  */
-function getTone(palmHeight) {
-    var currentTone = parseInt(Math.max(palmHeight-minValidHeight, 0.1)/semitoneHeight);
-    console.log("TONE: " + Math.min(currentTone, NUMBER_OF_SEMITONES*NUMBER_OF_OCTAVES - 1));
-    return Math.min(currentTone, NUMBER_OF_SEMITONES*NUMBER_OF_OCTAVES - 1);
+LeapManager.getTone = function(palmHeight) {
+    var currentTone = parseInt(Math.max(palmHeight-LeapManager.minValidHeight, 0.1)/LeapManager.semitoneHeight);
+    console.log("TONE: " + Math.min(currentTone, LeapManager.NUMBER_OF_SEMITONES*LeapManager.NUMBER_OF_OCTAVES - 1));
+    return Math.min(currentTone, LeapManager.NUMBER_OF_SEMITONES*LeapManager.NUMBER_OF_OCTAVES - 1);
 }
 
 /**
@@ -120,12 +122,12 @@ function getTone(palmHeight) {
  *                      Motion library.
  * @return {Boolean}    True if this hand is grabbing, false otherwise.
  */
-function isGrabbing(hand) {
-    return hand.grabStrength >= GRAB_THRESHOLD;
+LeapManager.isGrabbing = function(hand) {
+    return hand.grabStrength >= LeapManager.GRAB_THRESHOLD;
 }
 
-function isPinching(hand) {
-    return hand.pinchStrength >= PINCH_THRESHOLD;
+LeapManager.isPinching = function(hand) {
+    return hand.pinchStrength >= LeapManager.PINCH_THRESHOLD;
 }
 
 /**
@@ -133,7 +135,7 @@ function isPinching(hand) {
  * gesture ended.
  * @param  {[type]} hand json containing a hand state.
  */
-function markAsNonPinching(hand) {
+LeapManager.markAsNonPinching = function(hand) {
     if(hand.justPinched) console.log("Pinch gesture ends.");
     hand.justPinched = false;
 }
@@ -143,14 +145,14 @@ function markAsNonPinching(hand) {
  * @param  {json} handFrame json with a hand frame.
  * @return {json}        returns a json containing the new hand state.
  */
-function addHand(handFrame) {
+LeapManager.addHand = function(handFrame) {
     var newHandState = {
         handId: handFrame.id,
         //TODO: What happens if I put a hand out of leap motion scope and
         //put it back? A new hand is created and our current instrument is the
         //default 0 one. So what we should do is assign by default the last 
         //instrument played by a left|right hand.
-        instrumentIndex: handFrame.type === "right" ? rightHandInstrument : leftHandInstrument,
+        instrumentIndex: handFrame.type === "right" ? this.rightHandInstrument : this.leftHandInstrument,
         currentTone: null,
         justPinched: false,
         //TODO: What happens if our user start putting out and in scope one of 
@@ -158,11 +160,11 @@ function addHand(handFrame) {
         //that the one that is permanent inside of scope.
         //We should use the channel of the hand that stopped being detected for 
         //longer.
-        channel: handArray.length > 0 ? (handArray[handArray.length-1].channel+1)%16 : 0,
+        channel: this.handArray.length > 0 ? (this.handArray[this.handArray.length-1].channel+1)%16 : 0,
         type: handFrame.type,
     };
 
-    handArray[handArray.length] = newHandState;
+    this.handArray[this.handArray.length] = newHandState;
     return newHandState;
 }
 
@@ -173,9 +175,9 @@ function addHand(handFrame) {
  * @return {json}        json with hand state. Undefined if this hand has not 
  *                         state (first time that we notice it).
  */
-function getHandState(handId) {
-    for(var i = 0; i < handArray.length; ++i) {
-        if(handArray[i].handId === handId) return handArray[i];
+LeapManager.getHandState = function(handId) {
+    for(var i = 0; i < this.handArray.length; ++i) {
+        if(this.handArray[i].handId === handId) return this.handArray[i];
     }
     return undefined;
 }
@@ -184,7 +186,7 @@ function getHandState(handId) {
  * If the user is doing the gesture to throw spiderweb return true.
  * Otherwise false.
  */
-function isThrowingSpiderWeb(handFrame) {
+LeapManager.isThrowingSpiderWeb = function(handFrame) {
     var passIndex, passMiddle, passRing, passPinky;
     passIndex = passMiddle = passRing = passPinky = false;
     for(var i = 0; i < handFrame.pointables.length; ++i) {
@@ -218,12 +220,12 @@ function isThrowingSpiderWeb(handFrame) {
  * @param  {string} handType  If the current hand is a left one or right one.
  * @param  {json} handState Current state of the hand that is changing instrument.
  */
-function changeToNextIntrument(handType, handState) {
-    handState.instrumentIndex = (++handState.instrumentIndex) % INSTRUMENT_LIST.length;
+LeapManager.changeToNextIntrument = function(handType, handState) {
+    handState.instrumentIndex = (++handState.instrumentIndex) % LeapManager.INSTRUMENT_LIST.length;
     handState.justPinched = true;
 
-    if(handType === "right") rightHandInstrument = handState.instrumentIndex;
-    else leftHandInstrument = handState.instrumentIndex;
+    if(handType === "right") this.rightHandInstrument = handState.instrumentIndex;
+    else this.leftHandInstrument = handState.instrumentIndex;
 }
 
 /**
@@ -232,13 +234,13 @@ function changeToNextIntrument(handType, handState) {
  * @param  {[int]}  palmWidth Width at which the user has the processed hand.
  * @return {Boolean}  
  */
-function isOnPlayingZone(palmWidth) {
-  if(palmWidth < MIN_WIDTH + NO_TONE_MARGIN || 
-    palmWidth > MAX_WIDTH - NO_TONE_MARGIN) return false;
+LeapManager.isOnPlayingZone = function(palmWidth) {
+  if(palmWidth < LeapManager.MIN_WIDTH + LeapManager.NO_TONE_MARGIN || 
+    palmWidth > LeapManager.MAX_WIDTH - LeapManager.NO_TONE_MARGIN) return false;
   return true;
 }
 
-function isFlippingHand(handFrame, previousFrame) {
+LeapManager.isFlippingHand = function(handFrame, previousFrame) {
     if(handFrame.type === "left")
         return handFrame.rotationAxis(previousFrame, 2)[2] <= -0.7;
     else 
@@ -250,41 +252,41 @@ function isFlippingHand(handFrame, previousFrame) {
  * @param  {[type]} handFrame json containing a frame information of a specific 
  *                            hand, provided by the leap motion library.
  */
-function processHand(handFrame, previousFrame) {
+LeapManager.processHand = function(handFrame, previousFrame) {
     //Get json with current state.
-    var handState = getHandState(handFrame.id);
+    var handState = this.getHandState(handFrame.id);
 
-    if(handState === undefined) var handState = addHand(handFrame);
+    if(handState === undefined) var handState = this.addHand(handFrame);
 
     var palmHeight = handFrame.palmPosition[1];
     var palmWidth = handFrame.palmPosition[0];
     
     //When grabbing the user is playing a tone.
     //Otherwise no tone is played.
-    if(isGrabbing(handFrame) && isOnPlayingZone(palmWidth)) {
-        var tone = getTone(palmHeight);
+    if(this.isGrabbing(handFrame) && this.isOnPlayingZone(palmWidth)) {
+        var tone = this.getTone(palmHeight);
         handState.currentTone = tone;
     }
     else {
         handState.currentTone = null;
 
         //When pinching we are changing the instrument (if not grabbing).
-        if(isPinching(handFrame) && !handState.justPinched) changeToNextIntrument(handFrame.type, handState);
-        else if(!isPinching(handFrame)) markAsNonPinching(handState);
+        if(this.isPinching(handFrame) && !handState.justPinched) this.changeToNextIntrument(handFrame.type, handState);
+        else if(!this.isPinching(handFrame)) this.markAsNonPinching(handState);
     }
 
-    if(isFlippingHand(handFrame, previousFrame)) {
+    if(this.isFlippingHand(handFrame, previousFrame)) {
         console.log("Hand flipped!!!");
         HandPlayer.activateCurrentPattern();
     }
 
-    if(isThrowingSpiderWeb(handFrame)) {
+    if(this.isThrowingSpiderWeb(handFrame)) {
         console.log("Is Throwing Spider webs!!!")
         if(HandPlayer.isRecording() && HandPlayer.enoughtRecordingTime()) HandPlayer.generateMidiFile();
         else if(!HandPlayer.isRecording()) HandPlayer.startRecording();
     }
 
-    updateHandOnScreen(handFrame, handState);
+    MakerViz.updateHandOnScreen(handFrame, handState);
 }
 
 //Leap loop. It will receive user interaction using leap motion.
@@ -294,7 +296,7 @@ Leap.loop(controllerOptions, function(frame) {
   }
 
   for(var i = 0; i < frame.hands.length; ++i) {
-      processHand(frame.hands[i], previousFrame);
+      LeapManager.processHand(frame.hands[i], LeapManager.previousFrame);
   }
 
   var handOutput = document.getElementById("handData");
@@ -316,16 +318,16 @@ Leap.loop(controllerOptions, function(frame) {
       handString += "Arm up vector: " + vectorToString(hand.arm.basis[1]) + "<br />";
 
       // Hand motion factors
-      if (previousFrame && previousFrame.valid) {
-        var translation = hand.translation(previousFrame);
+      if (LeapManager.previousFrame && LeapManager.previousFrame.valid) {
+        var translation = hand.translation(LeapManager.previousFrame);
         handString += "Translation: " + vectorToString(translation) + " mm<br />";
 
-        var rotationAxis = hand.rotationAxis(previousFrame, 2);
-        var rotationAngle = hand.rotationAngle(previousFrame);
+        var rotationAxis = hand.rotationAxis(LeapManager.previousFrame, 2);
+        var rotationAngle = hand.rotationAngle(LeapManager.previousFrame);
         handString += "Rotation axis: " + vectorToString(rotationAxis) + "<br />";
         handString += "Rotation angle: " + rotationAngle.toFixed(2) + " radians<br />";
 
-        var scaleFactor = hand.scaleFactor(previousFrame);
+        var scaleFactor = hand.scaleFactor(LeapManager.previousFrame);
         handString += "Scale factor: " + scaleFactor.toFixed(2) + "<br />";
       }
 
@@ -439,7 +441,7 @@ Leap.loop(controllerOptions, function(frame) {
   gestureOutput.innerHTML = gestureString;
 
   // Store frame for motion functions
-  previousFrame = frame;
+  LeapManager.previousFrame = frame;
 })
 
 function vectorToString(vector, digits) {

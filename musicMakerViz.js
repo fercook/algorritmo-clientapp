@@ -1,9 +1,11 @@
-var CIRCLE_RADIUS = 20;
+var MakerViz = {};
+
+MakerViz.CIRCLE_RADIUS = 20;
 
 //Constant containing render time.
-var RENDER_INTERVAL_TIME = 300;
+MakerViz.RENDER_INTERVAL_TIME = 300;
 
-function adjustSVGArea() {
+MakerViz.adjustSVGArea = function() {
     d3.select(".svg-tag").remove();
 
     var svg = d3.select("#svg-container").append("svg")
@@ -14,13 +16,11 @@ function adjustSVGArea() {
     svg.append("g").attr("class", "circle-container");
     svg.append("g").attr("class", "tail-container");
 
-    printSafeZone();
+    this.printSafeZone();
 
-    printLines(NUMBER_OF_OCTAVES*NUMBER_OF_SEMITONES, window.innerWidth, window.innerHeight);
+    this.printLines(LeapManager.NUMBER_OF_OCTAVES*LeapManager.NUMBER_OF_SEMITONES, window.innerWidth, window.innerHeight);
     svg.append("g").attr("class", "speech-ballons");
 }
-adjustSVGArea();
-window.addEventListener("resize", adjustSVGArea);
 
 
 /**
@@ -28,7 +28,7 @@ window.addEventListener("resize", adjustSVGArea);
  * We could be in the middle of a pattern record or in the finished state when
  * we can decide to add this pattern.
  */
-function printPattern() {
+MakerViz.printPattern = function() {
     d3.select(".pattern-bar-completed").remove();
     d3.select(".pattern-bar-uncompleted").remove();
 
@@ -58,8 +58,8 @@ function printPattern() {
 /**
  * In charge of printing the zone where there are no sound.
  */
-function printSafeZone() {
-    var marginPercent = Math.max(NO_TONE_MARGIN, 0)*100/(maxValidWidth-minValidWidth);  
+MakerViz.printSafeZone = function() {
+    var marginPercent = Math.max(LeapManager.NO_TONE_MARGIN, 0)*100/(LeapManager.maxValidWidth-LeapManager.minValidWidth);  
     var marginInPixels = marginPercent*window.innerWidth/100;
     d3.select(".svg-tag").append("rect")
         .attr("x", 0)
@@ -82,7 +82,7 @@ function printSafeZone() {
  * totalHeight is the total height of all lines.
  * width is the width of each line.
  */
-function printLines(numLines, width, totalHeight) {
+MakerViz.printLines = function(numLines, width, totalHeight) {
     var linesContainer = 
         d3.select(".svg-tag").append("g").attr("class", "lines-container");
     var lineHeight = totalHeight/numLines;
@@ -97,7 +97,7 @@ function printLines(numLines, width, totalHeight) {
 }
 
 
-function drawSpeechBallon(handid, left, top, instrumentName) {
+MakerViz.drawSpeechBallon = function(handid, left, top, instrumentName) {
     d3.selectAll(".speechB.id-" + handid).remove();
     d3.selectAll(".instrumentImg.id-" + handid).remove();
     var speechB = d3.select(".speech-ballons").append("image")
@@ -133,25 +133,25 @@ function drawSpeechBallon(handid, left, top, instrumentName) {
 }
 
 
-function updateHandOnScreen(handFrame, handState) {
-    var left = Math.max(handFrame.palmPosition[0] - minValidWidth, 0)*100/(maxValidWidth-minValidWidth);
-    var top = Math.max(handFrame.palmPosition[1] - minValidHeight, 0)*100/(maxValidHeight-minValidHeight);
-    d3.selectAll("circle[cx='" + -CIRCLE_RADIUS + "px']").remove();
+MakerViz.updateHandOnScreen = function(handFrame, handState) {
+    var left = Math.max(handFrame.palmPosition[0] - LeapManager.minValidWidth, 0)*100/(LeapManager.maxValidWidth-LeapManager.minValidWidth);
+    var top = Math.max(handFrame.palmPosition[1] - LeapManager.minValidHeight, 0)*100/(LeapManager.maxValidHeight-LeapManager.minValidHeight);
+    d3.selectAll("circle[cx='" + -this.CIRCLE_RADIUS + "px']").remove();
     d3.selectAll(".no-grabbing.id-" + handFrame.id).remove();
     d3.selectAll("circle[r='0px']").remove();
     var circle = d3.select(".circle-container").append("circle")
         .attr("cx", left*window.innerWidth/100 + "px")
         .attr("cy", (100 - top)*window.innerHeight/100 + "px")
-        .attr("r", CIRCLE_RADIUS)
-        .attr("class", handFrame.type + "-hand-mark " + (isGrabbing(handFrame) ? "grabbing":"no-grabbing") + " id-" + handFrame.id)
-    if(isGrabbing(handFrame)) circle.transition()
+        .attr("r", this.CIRCLE_RADIUS)
+        .attr("class", handFrame.type + "-hand-mark " + (LeapManager.isGrabbing(handFrame) ? "grabbing":"no-grabbing") + " id-" + handFrame.id)
+    if(LeapManager.isGrabbing(handFrame)) circle.transition()
             .duration(left*20)
             .ease("linear")
-            .attr("cx", -CIRCLE_RADIUS + "px")
+            .attr("cx", -this.CIRCLE_RADIUS + "px")
             .attrTween("r", 
                 function() { 
                     return function(){ 
-                        return Math.max(Math.random()*(CIRCLE_RADIUS-3), 1);
+                        return Math.max(Math.random()*(MakerViz.CIRCLE_RADIUS-3), 1);
                     } 
                 }
             );
@@ -160,11 +160,14 @@ function updateHandOnScreen(handFrame, handState) {
             .duration(1000)
             .attr("r", "0px");
 
-    drawSpeechBallon(handFrame.id, left*window.innerWidth/100, (100 - top)*window.innerHeight/100, INSTRUMENT_LIST[handState.instrumentIndex].name);
+    this.drawSpeechBallon(handFrame.id, left*window.innerWidth/100, (100 - top)*window.innerHeight/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
 }
 
-function render() {
-    printPattern();
+MakerViz.render = function() {
+    this.printPattern();
 }
 
-setInterval(render, RENDER_INTERVAL_TIME);
+
+MakerViz.adjustSVGArea();
+window.addEventListener("resize", MakerViz.adjustSVGArea.bind(MakerViz));
+setInterval(MakerViz.render.bind(MakerViz), MakerViz.RENDER_INTERVAL_TIME);
