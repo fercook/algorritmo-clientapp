@@ -7,6 +7,9 @@
 var INTERVAL_TIME = 300;
 var TEMPO = 200; //beats per minute.
 
+//Minimum time a record should last.
+var MINIMUM_RECORDING_TIME = 5000;
+
 var INSTRUMENT_PER_HAND = 5;
 
 var NUM_TONES_PATTERN = 10;
@@ -21,7 +24,8 @@ var FIRST_NOTE_ID = 21;
 
 var midiStreamerLoaded = false;
 
-var recordEnabled = true;
+var recordEnabled = false;
+var timeSinceStartingToRecord = 0;
 
 //Contains the pattern being generated currently.
 var currentPatternArray = new Array(INSTRUMENT_PER_HAND*2);
@@ -137,6 +141,16 @@ function record(hands, destArray) {
     }
 }
 
+function enoughtRecordingTime() {
+    return performance.now() - timeSinceStartingToRecord >= MINIMUM_RECORDING_TIME;
+}
+
+
+function startRecording() {
+    recordEnabled = true;
+    timeSinceStartingToRecord = performance.now();
+}
+
 
 function isRecording() {
     return recordEnabled;
@@ -167,14 +181,14 @@ function addTonesToTrack(track, tones, channel, noteOn) {
         if(tones[i] !== -1) {  
             if(noteOn) {
                 //If first note.
-                if(isSilence) track.noteOn(channel, FIRST_NOTE_ID + tone, wait);
-                else track.noteOn(channel, FIRST_NOTE_ID + tone);
+                if(isSilence) track.noteOn(channel, FIRST_NOTE_ID + tones[i], wait);
+                else track.noteOn(channel, FIRST_NOTE_ID + tones[i]);
             }
             else {
-                track.noteOff(channel, FIRST_NOTE_ID + tone, time);
+                track.noteOff(channel, FIRST_NOTE_ID + tones[i], time);
                 //If first note.
-                if(isSilence) track.noteOff(channel, FIRST_NOTE_ID + tone, time);
-                else track.noteOff(channel, FIRST_NOTE_ID + tone);
+                if(isSilence) track.noteOff(channel, FIRST_NOTE_ID + tones[i], time);
+                else track.noteOff(channel, FIRST_NOTE_ID + tones[i]);
             }
              isSilence = false;
         }
@@ -184,7 +198,7 @@ function addTonesToTrack(track, tones, channel, noteOn) {
 
 function fillTrackWithArray(track, trackArray) {
     var modifiedTrack = track;
-    for(var j = 0; j < trackArray[0].length; ++j) {
+    for(var j = 0; trackArray[0] && j < trackArray[0].length; ++j) {
         var areTones = false;
         for(var i = 0; i < trackArray.length; ++i) 
             areTones = addTonesToTrack(track, trackArray[i][j].tones, i, true) || areTones;
@@ -192,17 +206,15 @@ function fillTrackWithArray(track, trackArray) {
             areTones = addTonesToTrack(track, trackArray[i][j].tones, i, true) || areTones;
         
         if(!areTones) {
-            track.noteOn(channel, FIRST_NOTE_ID + tone, 72);
-            track.noteOff(channel, FIRST_NOTE_ID + tone, 0);
+            track.noteOn(i, FIRST_NOTE_ID, 72);
+            track.noteOff(i, FIRST_NOTE_ID, 0);
         }
     }
 }
 
-//generateMidiFile();
 
 function generateMidiFile() {
-    //TODO: Erase.
-    generateMidi=false;
+    recordEnabled = false;
 
     var file = new Midi.File();
     var track = new Midi.Track();
@@ -262,7 +274,7 @@ function recordActivePatterns(recordingArray) {
             var cIndex = (activePattern.index + 1) % NUM_TONES_PATTERN;
             recordingArray[j][recordingArray[j].length-1].tones = 
                 recordingArray[j][recordingArray[j].length-1].tones.concat(
-                    activePattern.pattern[j][cIndex]);
+                    activePattern.pattern[j][cIndex].tones);
         }
     }
 }
@@ -280,7 +292,7 @@ function playActivePatterns() {
         for(var j = 0; j < INSTRUMENT_PER_HAND*2; ++j) {
             var tones = activePattern.pattern[j][cIndex].tones;
             for(var k= 0; k < tones-length; ++k) {
-                playTone(tones[k], j, INSTRUMENT_LIST[j%INSTRUMENT_PER_HAND].id);
+                playTone(FIRST_NOTE_ID + tones[k], j, INSTRUMENT_LIST[j%INSTRUMENT_PER_HAND].id);
             }
         }
     }

@@ -28,8 +28,8 @@ var maxValidHeight = MAX_HEIGHT;
 //Constants containing threshold at which a gesture starts being identified as valid.
 //The leap motion library provides a percentage indicating how possible it's the user
 //to be doing a specific gesture. This rate goes from 0 to 1.
-GRAB_THRESHOLD = 0.6;
-PINCH_THRESHOLD = 0.8;
+GRAB_THRESHOLD = 0.8;
+PINCH_THRESHOLD = 0.6;
 
 NUMBER_OF_OCTAVES = 7;
 NUMBER_OF_SEMITONES = 12;
@@ -181,6 +181,37 @@ function getHandState(handId) {
 }
 
 /**
+ * If the user is doing the gesture to throw spiderweb return true.
+ * Otherwise false.
+ */
+function isThrowingSpiderWeb(handFrame) {
+    var passIndex, passMiddle, passRing, passPinky;
+    passIndex = passMiddle = passRing = passPinky = false;
+    for(var i = 0; i < handFrame.pointables.length; ++i) {
+        switch(handFrame.pointables[i].type) {
+            //Index finger
+            case 1:
+                passIndex = handFrame.pointables[i].direction[1] >= -0.25;
+                break;
+            //Middle finger
+            case 2:
+                passMiddle = handFrame.pointables[i].direction[1] <= -0.65;
+                break;
+            //Ring finger
+            case 3:
+                passRing = handFrame.pointables[i].direction[1] <= -0.65;
+                break;
+            //Pinky finger
+            case 4:
+                passPinky = handFrame.pointables[i].direction[1] >= -0.25;
+                break;
+        };
+    }
+
+    return passIndex && passPinky && (passMiddle || passRing);
+}
+
+/**
  * Changes the handState instrument to the next one. Instruments are sorted 
  * according to INSTRUMENT_LIST order and rotate accordingly.
  * 
@@ -245,6 +276,12 @@ function processHand(handFrame, previousFrame) {
     if(isFlippingHand(handFrame, previousFrame)) {
         console.log("Hand flipped!!!");
         activateCurrentPattern();
+    }
+
+    if(isThrowingSpiderWeb(handFrame)) {
+        console.log("Is Throwing Spider webs!!!")
+        if(isRecording() && enoughtRecordingTime()) generateMidiFile();
+        else if(!isRecording()) startRecording();
     }
 
     updateHandOnScreen(handFrame, handState);
