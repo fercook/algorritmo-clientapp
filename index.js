@@ -275,13 +275,13 @@ function processHand(handFrame, previousFrame) {
 
     if(isFlippingHand(handFrame, previousFrame)) {
         console.log("Hand flipped!!!");
-        activateCurrentPattern();
+        HandPlayer.activateCurrentPattern();
     }
 
     if(isThrowingSpiderWeb(handFrame)) {
         console.log("Is Throwing Spider webs!!!")
-        if(isRecording() && enoughtRecordingTime()) generateMidiFile();
-        else if(!isRecording()) startRecording();
+        if(HandPlayer.isRecording() && HandPlayer.enoughtRecordingTime()) HandPlayer.generateMidiFile();
+        else if(!HandPlayer.isRecording()) HandPlayer.startRecording();
     }
 
     updateHandOnScreen(handFrame, handState);
