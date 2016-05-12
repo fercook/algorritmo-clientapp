@@ -35,3 +35,12 @@ body {
 .instrumentImg {
     opacity: 0.8;
 }
+
+.voronoi-area > path {
+    fill: transparent;
+}
+
+
+.voronoi-area > path:first-child {
+    fill: yellow;
+}

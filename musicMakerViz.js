@@ -2,6 +2,9 @@ var MakerViz = {};
 
 MakerViz.CIRCLE_RADIUS = 20;
 
+MakerViz.SCORE_WIDTH = window.innerWidth;
+MakerViz.SCORE_HEIGHT = window.innerHeight;
+
 //Constant containing render time.
 MakerViz.RENDER_INTERVAL_TIME = 300;
 
@@ -20,7 +23,52 @@ MakerViz.adjustSVGArea = function() {
 
     this.printLines(LeapManager.NUMBER_OF_OCTAVES*LeapManager.NUMBER_OF_SEMITONES, window.innerWidth, window.innerHeight);
     svg.append("g").attr("class", "speech-ballons");
+
+    //this.printVoronoi();
 }
+
+/*MakerViz.redrawVoronoi = function() {
+    this.voronoiPaths = this.voronoiPaths
+        .data(this.voronoi(this.vertices), polygon);
+
+    this.voronoiPaths.exit().remove();
+
+    this.voronoiPaths.enter().append("path")
+        .attr("d", polygon);
+
+    this.voronoiPaths.order();
+
+    function polygon(d) {
+      return "M" + d.join("L") + "Z";
+    }
+}
+
+MakerViz.voronoiPaths = undefined;
+
+MakerViz.vertices = undefined;
+MakerViz.voronoi = undefined;
+
+MakerViz.printVoronoi = function() {
+    this.vertices = d3.range(2000).map(function(d) {
+        return [Math.random() * MakerViz.SCORE_WIDTH, Math.random() * MakerViz.SCORE_HEIGHT];
+    });
+
+    var voronoiContainer = d3.select(".svg-tag").append("g")
+        .attr("class", "voronoi-area")
+        .attr("height", this.SCORE_HEIGHT)
+        .attr("width", this.SCORE_WIDTH)
+        .on("mousemove", function() { 
+            MakerViz.vertices[0] = d3.mouse(this); 
+            MakerViz.redrawVoronoi(); }
+        );
+
+    this.voronoiPaths = voronoiContainer.selectAll("path");
+
+    this.voronoi = d3.geom.voronoi()
+        .clipExtent([[0, 0], [this.SCORE_WIDTH, this.SCORE_HEIGHT]]);
+
+    this.redrawVoronoi();
+}*/
 
 
 /**
