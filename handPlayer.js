@@ -14,7 +14,7 @@ HandPlayer.MINIMUM_RECORDING_TIME = 5000;
 
 HandPlayer.INSTRUMENT_PER_HAND = 5;
 
-HandPlayer.NUM_TONES_PATTERN = 10;
+HandPlayer.NUM_TONES_PATTERN = 67;
 
 //How hard the note hits, from 0-127.
 HandPlayer.VELOCITY = 127;
@@ -73,11 +73,11 @@ HandPlayer.getFirstHandWithType = function(hands, type) {
  * @param  {[type]} instrumentIndex [description]
  * @param  {[type]} tone            [description]
  */
-HandPlayer.applyCurrentTone = function(recordingArrayIndex, tone, destArray) {
+HandPlayer.applyCurrentTone = function(toneIndex, recordingArrayIndex, tone, destArray) {
     if(!destArray[recordingArrayIndex]) destArray[recordingArrayIndex] = [];
     
     var currentInsArray = destArray[recordingArrayIndex];
-    currentInsArray[currentInsArray.length] = {tones: [tone], numTimes:1};
+    currentInsArray[toneIndex] = {tones: [tone], numTimes:1};
 }
 
 /**
@@ -93,15 +93,16 @@ HandPlayer.addSilence = function(recordingArrayIndex, destArray) {
 }
 
 /**
- * Takes the pattern that was just generated and adds it to the array of active 
- * patterns which will be played in loop.
- * Then order to start recording a new pattern.
+ * Takes the pattern that was just generated and merge it with the current active
+ * pattern. There will be just an active pattern, the one which will conform the 
+ * resultant song.
  */
-HandPlayer.activateCurrentPattern = function() {
+/*HandPlayer.activateCurrentPattern = function() {
     if(!this.patternRecordingEnabled) {
-        this.activePatterns[this.activePatterns.length] = {index: -1, pattern: HandPlayer.currentPatternArray};
-        if(this.timeoutId) clearTimeout(this.timeoutId);
-        this.enablePatternRecording();
+        if(this.activePatterns.length <= 0) this.activePatterns[this.activePatterns.length] = {index: -1, pattern: HandPlayer.currentPatternArray};
+        else this.mergePatterns();
+        //if(this.timeoutId) clearTimeout(this.timeoutId);
+        //this.enablePatternRecording();
     }
 }
 
@@ -110,19 +111,12 @@ HandPlayer.enablePatternRecording = function() {
         this.currentPatternArray = new Array(HandPlayer.INSTRUMENT_PER_HAND*2);
         this.patternRecordingEnabled = true;
     }
-}
+}*/
 
 
 HandPlayer.recordPattern = function(hands) {
-    if(this.patternRecordingEnabled && this.currentPatternArray[0] && this.currentPatternArray[0].length >= HandPlayer.NUM_TONES_PATTERN) {
-        this.patternRecordingEnabled = false;
-        this.timeoutId = setTimeout(this.enablePatternRecording.bind(this), 4000);
-    }
-
-    if(this.patternRecordingEnabled) {
-        if(this.currentPatternArray === null) this.currentPatternArray = [];
-        this.record(hands, this.currentPatternArray);
-    }
+    if(!this.activePatterns[0]) this.activePatterns[0] = {index: -1, pattern: new Array(HandPlayer.INSTRUMENT_PER_HAND*2)};
+    this.record(this.activePatterns[0].index + 1, hands, this.activePatterns[0].pattern);
 }
 
 /**
@@ -130,15 +124,15 @@ HandPlayer.recordPattern = function(hands) {
  * @param  {[Array]} hands array of hands. We support just two hands (one right 
  * and one left) if more are provident they will be ignored.
  */
-HandPlayer.record = function(hands, destArray) {
+HandPlayer.record = function(toneIndex, hands, destArray) {
     var lHand = this.getFirstHandWithType(hands, "left");
     var rHand = this.getFirstHandWithType(hands, "right");
 
     for(var i = 0; i < this.recordingArray.length; ++i) {
         if(lHand !== null && i == hands[lHand].instrumentIndex) 
-            this.applyCurrentTone(i, hands[lHand].currentTone, destArray);
+            this.applyCurrentTone(toneIndex, i, hands[lHand].currentTone, destArray);
         else if(rHand !== null && i == hands[rHand].instrumentIndex + HandPlayer.INSTRUMENT_PER_HAND) 
-            this.applyCurrentTone(i, hands[rHand].currentTone, destArray);
+            this.applyCurrentTone(toneIndex, i, hands[rHand].currentTone, destArray);
         else this.addSilence(i, destArray);
     }
 }
@@ -316,21 +310,21 @@ HandPlayer.playTone = function(tone, channel, instrument) {
 HandPlayer.processTones = function() {
     if(!this.midiStreamerLoaded) return false;
 
-    if(this.isRecording()) {
+    /*if(this.isRecording()) {
         this.record(LeapManager.handArray, this.recordingArray);
         this.recordActivePatterns(this.recordingArray);
-    }
+    }*/
 
     this.recordPattern(LeapManager.handArray);
 
-    for(var i = 0; i < LeapManager.handArray.length; ++i) {
+    /*for(var i = 0; i < LeapManager.handArray.length; ++i) {
         console.log("PLAYING TONE: " + LeapManager.handArray[i].currentTone);
         if(LeapManager.handArray[i].currentTone !== null) {
             this.playTone(HandPlayer.FIRST_NOTE_ID + LeapManager.handArray[i].currentTone, LeapManager.handArray[i].channel, LeapManager.INSTRUMENT_LIST[LeapManager.handArray[i].instrumentIndex].id);
 
             LeapManager.handArray[i].currentTone = null;
         }
-    }
+    }*/
 
     this.playActivePatterns();
     this.moveActivePatternsForward();

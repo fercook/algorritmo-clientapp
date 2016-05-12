@@ -275,16 +275,16 @@ LeapManager.processHand = function(handFrame, previousFrame) {
         else if(!this.isPinching(handFrame)) this.markAsNonPinching(handState);
     }
 
-    if(this.isFlippingHand(handFrame, previousFrame)) {
+    /*if(this.isFlippingHand(handFrame, previousFrame)) {
         console.log("Hand flipped!!!");
         HandPlayer.activateCurrentPattern();
-    }
+    }*/
 
-    if(this.isThrowingSpiderWeb(handFrame)) {
+    /*if(this.isThrowingSpiderWeb(handFrame)) {
         console.log("Is Throwing Spider webs!!!")
         if(HandPlayer.isRecording() && HandPlayer.enoughtRecordingTime()) HandPlayer.generateMidiFile();
         else if(!HandPlayer.isRecording()) HandPlayer.startRecording();
-    }
+    }*/
 
     MakerViz.updateHandOnScreen(handFrame, handState);
 }

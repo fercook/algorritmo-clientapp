@@ -80,7 +80,7 @@ MakerViz.printPattern = function() {
     d3.select(".pattern-bar-completed").remove();
     d3.select(".pattern-bar-uncompleted").remove();
 
-    var percentage = HandPlayer.patternRecordingEnabled && HandPlayer.currentPatternArray[0] ? (HandPlayer.currentPatternArray[0].length*100/HandPlayer.NUM_TONES_PATTERN) : (!HandPlayer.patternRecordingEnabled ? 100 : 0);
+    var percentage = HandPlayer.activePatterns[0] ? (HandPlayer.activePatterns[0].index*100/HandPlayer.NUM_TONES_PATTERN) : 0;
 
     var barMargin = 25;
     var height = 40;
