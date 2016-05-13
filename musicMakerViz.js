@@ -70,6 +70,47 @@ MakerViz.printVoronoi = function() {
     this.redrawVoronoi();
 }*/
 
+MakerViz.printRecordedInstruments = function() {
+    var pattern = HandPlayer.activePatterns[0].pattern;
+
+    d3.select(".pattern-bar-group").remove();
+
+    var barGroup = d3.select(".svg-tag").append("g")
+        .attr("class", "pattern-bar-group")
+        .attr("width", window.innerWidth)
+        .attr("height", "500");
+
+    var x = d3.scale.linear()
+    .range([0, window.innerWidth]);
+
+    var y = d3.scale.linear()
+        .range([50, 0]);
+
+    var line = d3.svg.line()
+        .x(function(d, i) { 
+            return x(i); 
+        })
+        .y(function(d, i) { 
+            return y(Math.max(d.tones[0], 0)); 
+        });
+
+    x.domain([0, HandPlayer.NUM_TONES_PATTERN-1]);
+    y.domain([0, LeapManager.NUMBER_OF_SEMITONES*LeapManager.NUMBER_OF_OCTAVES]);
+
+    var top = 0;
+
+    for(var inst = 0; inst < pattern.length; ++inst) {
+
+        barGroup.append("g")
+            .attr("transform", "translate(0," + top + ")")
+          .append("path")
+              .datum(pattern[inst])
+              .attr("class", "line")
+              .attr("d", line);
+        top += 50;
+    }
+}
+
 
 /**
  * Print the bar which informs in what state of pattern recording we are.
@@ -213,6 +254,7 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
 
 MakerViz.render = function() {
     this.printPattern();
+    this.printRecordedInstruments();
 }
 
 

@@ -44,3 +44,9 @@ body {
 .voronoi-area > path:first-child {
     fill: yellow;
 }
+
+path.line {
+    fill: none;
+    stroke: steelblue;
+    stroke-width: 1.5px;
+}
