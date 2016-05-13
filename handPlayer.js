@@ -61,8 +61,8 @@ function onsuccess() {
  * @param  {[Array]} hands 
  * @param  {[string]} type
  */
-HandPlayer.getFirstHandWithType = function(hands, type) {
-    for(var i = 0; i < hands.length; ++i) 
+HandPlayer.getLastHandWithType = function(hands, type) {
+    for(var i =  hands.length-1; i >= 0; --i) 
         if(hands[i].type == type && hands[i].currentTone !== null) return i;
     return null;
 }
@@ -85,11 +85,11 @@ HandPlayer.applyCurrentTone = function(toneIndex, recordingArrayIndex, tone, des
  * When our system plays a sound, each channel that is not sounding 
  * at this moment should have a silence. 
  */
-HandPlayer.addSilence = function(recordingArrayIndex, destArray) {
+HandPlayer.addSilence = function(toneIndex, recordingArrayIndex, destArray) {
     if(!destArray[recordingArrayIndex]) destArray[recordingArrayIndex] = [];
 
     var currentInsArray = destArray[recordingArrayIndex];
-    currentInsArray[currentInsArray.length] = {tones: [-1], numTimes:1};
+    currentInsArray[toneIndex] = {tones: [-1], numTimes:1};
 }
 
 /**
@@ -115,8 +115,8 @@ HandPlayer.enablePatternRecording = function() {
 
 
 HandPlayer.recordPattern = function(hands) {
-    if(!this.activePatterns[0]) this.activePatterns[0] = {index: -1, pattern: new Array(HandPlayer.INSTRUMENT_PER_HAND*2)};
-    this.record(this.activePatterns[0].index + 1, hands, this.activePatterns[0].pattern);
+    if(!this.activePatterns[0]) this.activePatterns[0] = {index: 0, pattern: new Array(HandPlayer.INSTRUMENT_PER_HAND*2)};
+    this.record(this.activePatterns[0].index, hands, this.activePatterns[0].pattern);
 }
 
 /**
@@ -125,15 +125,15 @@ HandPlayer.recordPattern = function(hands) {
  * and one left) if more are provident they will be ignored.
  */
 HandPlayer.record = function(toneIndex, hands, destArray) {
-    var lHand = this.getFirstHandWithType(hands, "left");
-    var rHand = this.getFirstHandWithType(hands, "right");
+    var lHand = this.getLastHandWithType(hands, "left");
+    var rHand = this.getLastHandWithType(hands, "right");
 
     for(var i = 0; i < this.recordingArray.length; ++i) {
         if(lHand !== null && i == hands[lHand].instrumentIndex) 
             this.applyCurrentTone(toneIndex, i, hands[lHand].currentTone, destArray);
         else if(rHand !== null && i == hands[rHand].instrumentIndex + HandPlayer.INSTRUMENT_PER_HAND) 
             this.applyCurrentTone(toneIndex, i, hands[rHand].currentTone, destArray);
-        else this.addSilence(i, destArray);
+        else if(!destArray[i] || !destArray[i][toneIndex]) this.addSilence(toneIndex, i, destArray);
     }
 }
 
@@ -268,7 +268,7 @@ HandPlayer.recordActivePatterns = function(recordingArray) {
         var activePattern = this.activePatterns[i];
         
         for(var j = 0; j < HandPlayer.INSTRUMENT_PER_HAND*2; ++j) {
-            var cIndex = (activePattern.index + 1) % HandPlayer.NUM_TONES_PATTERN;
+            var cIndex = activePattern.index;
             recordingArray[j][recordingArray[j].length-1].tones = 
                 recordingArray[j][recordingArray[j].length-1].tones.concat(
                     activePattern.pattern[j][cIndex].tones);
@@ -285,7 +285,7 @@ HandPlayer.moveActivePatternsForward = function() {
 HandPlayer.playActivePatterns = function() {
     for(var i = 0; i < this.activePatterns.length; ++i) {
         var activePattern = this.activePatterns[i];
-        cIndex = (activePattern.index + 1) % HandPlayer.NUM_TONES_PATTERN;
+        cIndex = activePattern.index;
         for(var j = 0; j < HandPlayer.INSTRUMENT_PER_HAND*2; ++j) {
             var tones = activePattern.pattern[j][cIndex].tones;
             for(var k= 0; k < tones-length; ++k) {

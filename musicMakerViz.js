@@ -5,6 +5,10 @@ MakerViz.CIRCLE_RADIUS = 20;
 MakerViz.SCORE_WIDTH = window.innerWidth;
 MakerViz.SCORE_HEIGHT = window.innerHeight;
 
+
+MakerViz.PROGRESS_BAR_HEIGHT = 25;
+MakerViz.MARGIN_BETWEEN_BARS = 5;
+
 //Constant containing render time.
 MakerViz.RENDER_INTERVAL_TIME = 300;
 
@@ -84,7 +88,7 @@ MakerViz.printRecordedInstruments = function() {
     .range([0, window.innerWidth]);
 
     var y = d3.scale.linear()
-        .range([50, 0]);
+        .range([MakerViz.PROGRESS_BAR_HEIGHT, 0]);
 
     var line = d3.svg.line()
         .x(function(d, i) { 
@@ -94,20 +98,38 @@ MakerViz.printRecordedInstruments = function() {
             return y(Math.max(d.tones[0], 0)); 
         });
 
+    var area = d3.svg.area()
+        .x(function(d, i) {
+            return x(i);
+        })
+        .y0(MakerViz.PROGRESS_BAR_HEIGHT)
+        .y1(function(d, i) {
+            return y(Math.max(d.tones[0], 0));
+        });
+
     x.domain([0, HandPlayer.NUM_TONES_PATTERN-1]);
     y.domain([0, LeapManager.NUMBER_OF_SEMITONES*LeapManager.NUMBER_OF_OCTAVES]);
 
     var top = 0;
 
     for(var inst = 0; inst < pattern.length; ++inst) {
-
-        barGroup.append("g")
+        var color = LeapManager.INSTRUMENT_LIST[inst%LeapManager.INSTRUMENT_LIST.length].color;
+        var gContainer = barGroup.append("g")
             .attr("transform", "translate(0," + top + ")")
-          .append("path")
+        gContainer.append("path")
               .datum(pattern[inst])
               .attr("class", "line")
-              .attr("d", line);
-        top += 50;
+              .attr("d", line)
+              .style("stroke", color)
+        gContainer.append("path")
+                .datum(pattern[inst])
+                .attr("class", "area")
+                .attr("d", area)
+                .style("fill", color)
+                .style("stroke", color);
+
+        top += MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS;
+
     }
 }
 

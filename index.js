@@ -44,11 +44,14 @@ LeapManager.semitoneHeight = (LeapManager.maxValidHeight-LeapManager.minValidHei
 
 LeapManager.INSTRUMENT_LIST = [
     {id: 0,
-     name: "acoustic_grand_piano"},
+     name: "acoustic_grand_piano",
+     color: "#fe40e0"},
     {id: 40,
-     name: "violin"},
+     name: "violin",
+     color: "#1efef6"},
     {id: 33,
-     name: "electric_bass_finger"},
+     name: "electric_bass_finger",
+     color: "#febc1d"},
     /*{id: 50,
      name: "synth_strings_1"},*/
 ]
