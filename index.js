@@ -33,13 +33,17 @@ LeapManager.maxValidHeight = LeapManager.MAX_HEIGHT;
 LeapManager.GRAB_THRESHOLD = 0.8;
 LeapManager.PINCH_THRESHOLD = 0.6;
 
-LeapManager.NUMBER_OF_OCTAVES = 7;
-LeapManager.NUMBER_OF_SEMITONES = 12;
+/**
+ * Number of tones used, we will paint as many line intervals as tones, and this
+ * will be the playable amount of tones.
+ */
+LeapManager.NUMBER_OF_TONES = 3*10;
+
 
 //NOTE: Midi notes and semi-notes goes from 0 to 11. And if we want to specify octave, we 
 //      should calculate note + 12 * octave. (octaves goes from 0 to 9, both included).
 //Height of each semitone. There are 12 seminotes * 10 octaves.
-LeapManager.semitoneHeight = (LeapManager.maxValidHeight-LeapManager.minValidHeight)/(LeapManager.NUMBER_OF_SEMITONES*LeapManager.NUMBER_OF_OCTAVES);
+LeapManager.semitoneHeight = (LeapManager.maxValidHeight-LeapManager.minValidHeight)/(LeapManager.NUMBER_OF_TONES);
 
 
 LeapManager.INSTRUMENT_LIST = [
@@ -102,7 +106,7 @@ LeapManager.adjustLeapValidArea = function() {
         this.minValidHeight = this.MIN_HEIGHT;
         this.maxValidHeight = this.MAX_HEIGHT;
     }
-    this.semitoneHeight = (this.maxValidHeight-this.minValidHeight)/(this.NUMBER_OF_SEMITONES*this.NUMBER_OF_OCTAVES);
+    this.semitoneHeight = (this.maxValidHeight-this.minValidHeight)/(LeapManager.NUMBER_OF_TONES);
 }
 //Call this method when loading the website.
 LeapManager.adjustLeapValidArea();
@@ -115,8 +119,8 @@ window.addEventListener("resize", LeapManager.adjustLeapValidArea.bind(LeapManag
  */
 LeapManager.getTone = function(palmHeight) {
     var currentTone = parseInt(Math.max(palmHeight-LeapManager.minValidHeight, 0.1)/LeapManager.semitoneHeight);
-    console.log("TONE: " + Math.min(currentTone, LeapManager.NUMBER_OF_SEMITONES*LeapManager.NUMBER_OF_OCTAVES - 1));
-    return Math.min(currentTone, LeapManager.NUMBER_OF_SEMITONES*LeapManager.NUMBER_OF_OCTAVES - 1);
+    console.log("TONE: " + Math.min(currentTone, LeapManager.NUMBER_OF_TONES - 1));
+    return Math.min(currentTone, LeapManager.NUMBER_OF_TONES - 1);
 }
 
 /**

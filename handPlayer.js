@@ -2,7 +2,6 @@
  * HandlePlayer is in charge of playing the music while generated, generating 
  * the midi file, recording patterns and managing active patterns.
  */
-
 var HandPlayer = {};
 
 //Constant containing time between tones.
@@ -43,6 +42,12 @@ HandPlayer.activePatterns = [];
 HandPlayer.timeoutId = undefined;
 
 /**
+ * One unit in our tone is TONE_GAP units on midi tones.
+ * This means that tone 2 is in reality tone 2*HandPlayer.TONE_GAP.
+ */
+HandPlayer.TONE_GAP = 3;
+
+/**
  * Contains information about a recorded track.
  * This is an array of arrays. Each sub-array corresponds to one instrument and 
  * hand.
@@ -67,6 +72,7 @@ HandPlayer.getLastHandWithType = function(hands, type) {
     return null;
 }
 
+
 /**
  * Given an index of recordingArray and a tone, adds this tone to the indicated 
  * instrument per hand sub-array.
@@ -79,6 +85,7 @@ HandPlayer.applyCurrentTone = function(toneIndex, recordingArrayIndex, tone, des
     var currentInsArray = destArray[recordingArrayIndex];
     currentInsArray[toneIndex] = {tones: [tone], numTimes:1};
 }
+
 
 /**
  * Adds an empty tone, a silence.
@@ -137,6 +144,7 @@ HandPlayer.record = function(toneIndex, hands, destArray) {
     }
 }
 
+
 HandPlayer.enoughtRecordingTime = function() {
     return performance.now() - this.timeSinceStartingToRecord >= HandPlayer.MINIMUM_RECORDING_TIME;
 }
@@ -152,6 +160,7 @@ HandPlayer.isRecording = function() {
     return this.recordEnabled;
 }
 
+
 //Load Midi streamer
 MIDI.loadPlugin({
     soundfontUrl: "./soundfonts/",
@@ -161,6 +170,16 @@ MIDI.loadPlugin({
         console.log(state, progress);
     },
 });
+
+
+/**
+ * Given a raw tone (id comming from the hand position) returns its equivalent
+ * tone in the MIDI format.
+ */
+HandPlayer.getValidTone = function(rawTone) {
+    return rawTone * HandPlayer.TONE_GAP + HandPlayer.FIRST_NOTE_ID;
+}
+
 
 /**
  * Given a channel, track and array of tones, add this tones to this track on
@@ -180,19 +199,20 @@ HandPlayer.addTonesToTrack = function(track, tones, channel, noteOn, wait) {
         if(tones[i] !== -1) {  
             if(noteOn) {
                 //If first note.
-                if(isSilence) track.noteOn(channel, HandPlayer.FIRST_NOTE_ID + tones[i], wait, HandPlayer.VELOCITY);
-                else track.noteOn(channel, HandPlayer.FIRST_NOTE_ID + tones[i]);
+                if(isSilence) track.noteOn(channel, this.getValidTone(tones[i]), wait, HandPlayer.VELOCITY);
+                else track.noteOn(channel, this.getValidTone(tones[i]));
             }
             else {
                 //If first note.
-                if(isSilence) track.noteOff(channel, HandPlayer.FIRST_NOTE_ID + tones[i], time);
-                else track.noteOff(channel, HandPlayer.FIRST_NOTE_ID + tones[i]);
+                if(isSilence) track.noteOff(channel, this.getValidTone(tones[i]), time);
+                else track.noteOff(channel, this.getValidTone(tones[i]));
             }
              isSilence = false;
         }
     }
     return !isSilence;
 }
+
 
 HandPlayer.fillTrackWithArray = function(track, trackArray) {
     var modifiedTrack = track;
@@ -263,6 +283,7 @@ HandPlayer.generateMidiFile = function() {
     a.click();
 }
 
+
 HandPlayer.recordActivePatterns = function(recordingArray) {
     for(var i = 0; i < this.activePatterns.length; ++i) {
         var activePattern = this.activePatterns[i];
@@ -276,11 +297,13 @@ HandPlayer.recordActivePatterns = function(recordingArray) {
     }
 }
 
+
 HandPlayer.moveActivePatternsForward = function() {
     for(var i = 0; i < this.activePatterns.length; ++i) {
         this.activePatterns[i].index = (this.activePatterns[i].index + 1) % HandPlayer.NUM_TONES_PATTERN;
     }
 }
+
 
 HandPlayer.playActivePatterns = function() {
     for(var i = 0; i < this.activePatterns.length; ++i) {
@@ -289,7 +312,7 @@ HandPlayer.playActivePatterns = function() {
         for(var j = 0; j < HandPlayer.INSTRUMENT_PER_HAND*2; ++j) {
             var tones = activePattern.pattern[j][cIndex].tones;
             for(var k= 0; k < tones-length; ++k) {
-                this.playTone(HandPlayer.FIRST_NOTE_ID + tones[k], j, LeapManager.INSTRUMENT_LIST[j%HandPlayer.INSTRUMENT_PER_HAND].id);
+                this.playTone(this.getValidTone(tones[k]), j, LeapManager.INSTRUMENT_LIST[j%HandPlayer.INSTRUMENT_PER_HAND].id);
             }
         }
     }

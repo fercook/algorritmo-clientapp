@@ -5,7 +5,6 @@ MakerViz.CIRCLE_RADIUS = 20;
 MakerViz.SCORE_WIDTH = window.innerWidth;
 MakerViz.SCORE_HEIGHT = window.innerHeight;
 
-
 MakerViz.PROGRESS_BAR_WMARGIN = 25;
 MakerViz.PROGRESS_BAR_HEIGHT = 25;
 MakerViz.MARGIN_BETWEEN_BARS = 5;
@@ -17,16 +16,16 @@ MakerViz.adjustSVGArea = function() {
     d3.select(".svg-tag").remove();
 
     var svg = d3.select("#svg-container").append("svg")
-    .attr("width", window.innerWidth)
-    .attr("height", window.innerHeight)
-    .attr("class", "svg-tag");
+        .attr("width", window.innerWidth)
+        .attr("height", window.innerHeight)
+        .attr("class", "svg-tag");
 
     svg.append("g").attr("class", "circle-container");
     svg.append("g").attr("class", "tail-container");
 
     this.printSafeZone();
 
-    this.printLines(LeapManager.NUMBER_OF_OCTAVES*LeapManager.NUMBER_OF_SEMITONES, window.innerWidth, window.innerHeight);
+    this.printLines(LeapManager.NUMBER_OF_TONES, window.innerWidth, window.innerHeight);
     svg.append("g").attr("class", "speech-ballons");
 
     //this.printVoronoi();
@@ -84,13 +83,17 @@ MakerViz.printRecordedInstLimits = function(container) {
         .style("stroke", "rgb(6,120,155)");*/
 
     container.append("rect")
-                .attr("class", "recorded-ins-rect")
-                .attr("x", 0)
-                .attr("y", -MakerViz.MARGIN_BETWEEN_BARS/2)
-                .attr("width", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
-                .attr("height", MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2);
+        .attr("class", "recorded-ins-rect")
+        .attr("x", 0)
+        .attr("y", -MakerViz.MARGIN_BETWEEN_BARS/2)
+        .attr("width", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
+        .attr("height", MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2);
 }
 
+
+/**
+ * Print current pattern, with recorded tones for each instrument.
+ */
 MakerViz.printRecordedInstruments = function() {
     var pattern = HandPlayer.activePatterns[0].pattern;
 
@@ -125,7 +128,7 @@ MakerViz.printRecordedInstruments = function() {
         });
 
     x.domain([0, HandPlayer.NUM_TONES_PATTERN-1]);
-    y.domain([0, LeapManager.NUMBER_OF_SEMITONES*LeapManager.NUMBER_OF_OCTAVES]);
+    y.domain([0, LeapManager.NUMBER_OF_TONES]);
 
     var top = 0;
 
@@ -148,6 +151,8 @@ MakerViz.printRecordedInstruments = function() {
 
         top += MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS;
     }
+
+    return barGroup;
 }
 
 
@@ -292,8 +297,8 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
 }
 
 MakerViz.render = function() {
-    this.printPattern();
     this.printRecordedInstruments();
+    this.printPattern();
 }
 
 
