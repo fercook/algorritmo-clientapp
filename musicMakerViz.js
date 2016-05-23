@@ -6,6 +6,7 @@ MakerViz.SCORE_WIDTH = window.innerWidth;
 MakerViz.SCORE_HEIGHT = window.innerHeight;
 
 
+MakerViz.PROGRESS_BAR_WMARGIN = 25;
 MakerViz.PROGRESS_BAR_HEIGHT = 25;
 MakerViz.MARGIN_BETWEEN_BARS = 5;
 
@@ -74,6 +75,22 @@ MakerViz.printVoronoi = function() {
     this.redrawVoronoi();
 }*/
 
+MakerViz.printRecordedInstLimits = function(container) {
+    /*container.append("svg:line")
+        .attr("x1", 0)
+        .attr("y1", 0)
+        .attr("x2", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
+        .attr("y2", 0)
+        .style("stroke", "rgb(6,120,155)");*/
+
+    container.append("rect")
+                .attr("class", "recorded-ins-rect")
+                .attr("x", 0)
+                .attr("y", -MakerViz.MARGIN_BETWEEN_BARS/2)
+                .attr("width", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
+                .attr("height", MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2);
+}
+
 MakerViz.printRecordedInstruments = function() {
     var pattern = HandPlayer.activePatterns[0].pattern;
 
@@ -81,11 +98,11 @@ MakerViz.printRecordedInstruments = function() {
 
     var barGroup = d3.select(".svg-tag").append("g")
         .attr("class", "pattern-bar-group")
-        .attr("width", window.innerWidth)
-        .attr("height", "500");
+        .attr("width", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
+        .attr("height", pattern.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS));
 
     var x = d3.scale.linear()
-    .range([0, window.innerWidth]);
+    .range([0, window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2]);
 
     var y = d3.scale.linear()
         .range([MakerViz.PROGRESS_BAR_HEIGHT, 0]);
@@ -115,7 +132,8 @@ MakerViz.printRecordedInstruments = function() {
     for(var inst = 0; inst < pattern.length; ++inst) {
         var color = LeapManager.INSTRUMENT_LIST[inst%LeapManager.INSTRUMENT_LIST.length].color;
         var gContainer = barGroup.append("g")
-            .attr("transform", "translate(0," + top + ")")
+            .attr("transform", "translate(" + MakerViz.PROGRESS_BAR_WMARGIN + "," + top + ")")
+        this.printRecordedInstLimits(gContainer);
         gContainer.append("path")
               .datum(pattern[inst])
               .attr("class", "line")
@@ -129,7 +147,6 @@ MakerViz.printRecordedInstruments = function() {
                 .style("stroke", color);
 
         top += MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS;
-
     }
 }
 

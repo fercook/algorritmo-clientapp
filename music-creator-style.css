@@ -50,3 +50,8 @@ path.line {
     stroke: steelblue;
     stroke-width: 1.5px;
 }
+
+.recorded-ins-rect {
+    fill: #e2e0d4;
+    stroke: #4d4d4d;
+}
