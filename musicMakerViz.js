@@ -75,19 +75,14 @@ MakerViz.printVoronoi = function() {
 }*/
 
 MakerViz.printRecordedInstLimits = function(container) {
-    /*container.append("svg:line")
-        .attr("x1", 0)
-        .attr("y1", 0)
-        .attr("x2", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
-        .attr("y2", 0)
-        .style("stroke", "rgb(6,120,155)");*/
-
-    container.append("rect")
-        .attr("class", "recorded-ins-rect")
-        .attr("x", 0)
-        .attr("y", -MakerViz.MARGIN_BETWEEN_BARS/2)
-        .attr("width", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
-        .attr("height", MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2);
+    //Only if there is not already a rect.
+    if(container.select(".recorded-ins-rect").size() === 0)
+        container.append("rect")
+            .attr("class", "recorded-ins-rect")
+            .attr("x", 0)
+            .attr("y", -MakerViz.MARGIN_BETWEEN_BARS/2)
+            .attr("width", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
+            .attr("height", MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2);
 }
 
 
@@ -97,15 +92,18 @@ MakerViz.printRecordedInstLimits = function(container) {
 MakerViz.printRecordedInstruments = function() {
     var pattern = HandPlayer.activePatterns[0].pattern;
 
-    d3.select(".pattern-bar-group").remove();
+    d3.selectAll(".pattern-bar-group > g.instrument-bar-group").remove();
+    var barGroup = d3.select(".pattern-bar-group");
 
-    var barGroup = d3.select(".svg-tag").append("g")
-        .attr("class", "pattern-bar-group")
-        .attr("width", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
-        .attr("height", pattern.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS));
+    if(barGroup.size() === 0) {
+        var barGroup = d3.select(".svg-tag").append("g")
+            .attr("class", "pattern-bar-group")
+            .attr("width", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
+            .attr("height", pattern.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS));
+    }
 
     var x = d3.scale.linear()
-    .range([0, window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2]);
+        .range([0, window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2]);
 
     var y = d3.scale.linear()
         .range([MakerViz.PROGRESS_BAR_HEIGHT, 0]);
@@ -134,20 +132,30 @@ MakerViz.printRecordedInstruments = function() {
 
     for(var inst = 0; inst < pattern.length; ++inst) {
         var color = LeapManager.INSTRUMENT_LIST[inst%LeapManager.INSTRUMENT_LIST.length].color;
-        var gContainer = barGroup.append("g")
-            .attr("transform", "translate(" + MakerViz.PROGRESS_BAR_WMARGIN + "," + top + ")")
-        this.printRecordedInstLimits(gContainer);
-        gContainer.append("path")
-              .datum(pattern[inst])
-              .attr("class", "line")
-              .attr("d", line)
-              .style("stroke", color)
-        gContainer.append("path")
-                .datum(pattern[inst])
+        var gContainer = d3.select(".inst-bar-g-" + inst);
+        if(gContainer.size() === 0) {
+            gContainer = barGroup.append("g")
+                .attr("class", "inst-bar-g-" + inst)
+                .attr("transform", "translate(" + MakerViz.PROGRESS_BAR_WMARGIN + "," + top + ")");
+            this.printRecordedInstLimits(gContainer);
+
+            gContainer.append("path")
+                .attr("class", "line")
+                .style("stroke", color);
+            gContainer.append("path")
                 .attr("class", "area")
-                .attr("d", area)
                 .style("fill", color)
                 .style("stroke", color);
+        }
+
+        gContainer.select(".line")
+              .datum(pattern[inst])
+              .transition()
+              .attr("d", line)
+        gContainer.select(".area")
+                .datum(pattern[inst])
+                .transition()
+                .attr("d", area)
 
         top += MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS;
     }
@@ -161,11 +169,31 @@ MakerViz.printRecordedInstruments = function() {
  * We could be in the middle of a pattern record or in the finished state when
  * we can decide to add this pattern.
  */
-MakerViz.printPattern = function() {
+MakerViz.printPattern = function(instrumentBarContainer) {
     d3.select(".pattern-bar-completed").remove();
     d3.select(".pattern-bar-uncompleted").remove();
 
-    var percentage = HandPlayer.activePatterns[0] ? (HandPlayer.activePatterns[0].index*100/HandPlayer.NUM_TONES_PATTERN) : 0;
+    var percentage = HandPlayer.activePatterns[0] ? ((HandPlayer.activePatterns[0].index - 1)*100/HandPlayer.NUM_TONES_PATTERN) : 0;
+
+    var coef = percentage/100;
+
+    var barGroup = d3.select(".tempo-line-group");
+    if(barGroup.size() !== 0) barGroup.select(".tempo-line")
+        .transition()
+            .attr("x1", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
+            .attr("x2", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
+    else {
+        barGroup = instrumentBarContainer.append("g")
+            .attr("class", "tempo-line-group")
+            .attr("transform", "translate(" + MakerViz.PROGRESS_BAR_WMARGIN + ",0)");
+
+        barGroup.append("svg:line")
+            .attr("x1", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
+            .attr("y1", 0)
+            .attr("x2", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
+            .attr("y2", HandPlayer.activePatterns[0].pattern.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS))
+            .attr("class","tempo-line");
+    }
 
     var barMargin = 25;
     var height = 40;
@@ -175,13 +203,13 @@ MakerViz.printPattern = function() {
         .attr("class", "pattern-bar-completed")
         .attr("x", barMargin)
         .attr("y", window.innerHeight-barMargin-height)
-        .attr("width", width*percentage/100 + "px")
+        .attr("width", width*coef + "px")
         .attr("height", height + "px")
         .style("fill", HandPlayer.patternRecordingEnabled ? "black" : "red");
 
     d3.select(".svg-tag").append("rect")
         .attr("class", "pattern-bar-uncompleted")
-        .attr("x", (barMargin + width*percentage/100) + "px")
+        .attr("x", (barMargin + width*coef) + "px")
         .attr("y", window.innerHeight-barMargin-height)
         .attr("width", width*(100-percentage)/100 + "px")
         .attr("height", height + "px")
@@ -208,6 +236,7 @@ MakerViz.printSafeZone = function() {
         .attr("height", window.innerHeight + "px")
         .style("fill", "#BB3E4F");
 }
+
 
 /**
  * Print numLines horizontal lines simulating a pentagram. Those lines are 
@@ -297,8 +326,8 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
 }
 
 MakerViz.render = function() {
-    this.printRecordedInstruments();
-    this.printPattern();
+    var insBarContainer = this.printRecordedInstruments();
+    this.printPattern(insBarContainer);
 }
 
 
