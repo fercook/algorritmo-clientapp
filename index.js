@@ -49,13 +49,16 @@ LeapManager.semitoneHeight = (LeapManager.maxValidHeight-LeapManager.minValidHei
 LeapManager.INSTRUMENT_LIST = [
     {id: 0,
      name: "acoustic_grand_piano",
-     color: "#fe40e0"},
+     color: "#fe40e0",
+     channel: 0},
     {id: 40,
      name: "violin",
-     color: "#1efef6"},
+     color: "#1efef6",
+     channel: 1},
     {id: 33,
      name: "electric_bass_finger",
-     color: "#febc1d"},
+     color: "#febc1d",
+     channel: 2},
     /*{id: 50,
      name: "synth_strings_1"},*/
 ]
@@ -63,11 +66,10 @@ LeapManager.INSTRUMENT_LIST = [
 //Array, for each hand we'll have an array.
 LeapManager.handArray = [];
 
-//This variables will contain the last instrument assign to a left and right
+//This variables will contain the last instrument assign to the current
 //hand respectively. And this instrument will be the default one when detecting
 //a new hand. This way we minimize the effect of losing track of a hand.
-LeapManager.leftHandInstrument = 0;
-LeapManager.rightHandInstrument = 0;
+LeapManager.currentHandInstrument = 0;
 
 // Store frame for motion functions
 LeapManager.previousFrame = null;
@@ -146,18 +148,18 @@ LeapManager.markAsNonPinching = function(hand) {
 }
 
 /**
- * Given a json containing a frame for a hand, adds this hand to our system.
+ * Given a  json containing a frame for a hand, adds this hand to our system.
  * @param  {json} handFrame json with a hand frame.
  * @return {json}        returns a json containing the new hand state.
  */
-LeapManager.addHand = function(handFrame) {
+LeapManager.replaceHand = function(handFrame) {
     var newHandState = {
         handId: handFrame.id,
         //TODO: What happens if I put a hand out of leap motion scope and
         //put it back? A new hand is created and our current instrument is the
         //default 0 one. So what we should do is assign by default the last 
         //instrument played by a left|right hand.
-        instrumentIndex: handFrame.type === "right" ? this.rightHandInstrument : this.leftHandInstrument,
+        instrumentIndex: this.currentHandInstrument,
         currentTone: null,
         justPinched: false,
         //TODO: What happens if our user start putting out and in scope one of 
@@ -165,11 +167,11 @@ LeapManager.addHand = function(handFrame) {
         //that the one that is permanent inside of scope.
         //We should use the channel of the hand that stopped being detected for 
         //longer.
-        channel: this.handArray.length > 0 ? (this.handArray[this.handArray.length-1].channel+1)%16 : 0,
+        channel: this.INSTRUMENT_LIST[this.currentHandInstrument].channel,
         type: handFrame.type,
     };
 
-    this.handArray[this.handArray.length] = newHandState;
+    this.handArray[0] = newHandState;
     return newHandState;
 }
 
@@ -229,8 +231,7 @@ LeapManager.changeToNextIntrument = function(handType, handState) {
     handState.instrumentIndex = (++handState.instrumentIndex) % LeapManager.INSTRUMENT_LIST.length;
     handState.justPinched = true;
 
-    if(handType === "right") this.rightHandInstrument = handState.instrumentIndex;
-    else this.leftHandInstrument = handState.instrumentIndex;
+    this.currentHandInstrument = handState.instrumentIndex;
 }
 
 /**
@@ -270,16 +271,11 @@ LeapManager.cleanHands = function(hands) {
 }
 
 /**
- * When we get information about an specific hand, process it.
+ * Process information about the current hand.
  * @param  {[type]} handFrame json containing a frame information of a specific 
  *                            hand, provided by the leap motion library.
  */
-LeapManager.processHand = function(handFrame, previousFrame) {
-    //Get json with current state.
-    var handState = this.getHandState(handFrame.id);
-
-    if(handState === undefined) var handState = this.addHand(handFrame);
-
+LeapManager.processHand = function(handFrame, handState, previousFrame) {
     var palmHeight = handFrame.palmPosition[1];
     var palmWidth = handFrame.palmPosition[0];
     
@@ -313,15 +309,24 @@ LeapManager.processHand = function(handFrame, previousFrame) {
 
 //Leap loop. It will receive user interaction using leap motion.
 Leap.loop(controllerOptions, function(frame) {
-  if(paused) {
-      return; // Skip this update
-  }
+    if(paused) {
+        return; // Skip this update
+    }
 
-  for(var i = 0; i < frame.hands.length; ++i) {
-      LeapManager.processHand(frame.hands[i], LeapManager.previousFrame);
-  }
+    var handState, handFrame;
+    for(var i = 0; i < frame.hands.length; ++i) {
+        handFrame = frame.hands[i];
+        handState = LeapManager.getHandState(handFrame.id);
+        if(handState) break;
+    }
+    //If the only hand being tracked is in the new frame, let's process it.
+    //Otherwise let's start tracking the first hand in the current frame.
+    if(handState === undefined && frame.hands.length > 0) {
+        handFrame = frame.hands[0]
+        handState = LeapManager.replaceHand(handFrame);
+    }
 
-  LeapManager.cleanHands(frame.hands);
+    if(handState !== undefined) LeapManager.processHand(handFrame, handState, LeapManager.previousFrame);
 
   var handOutput = document.getElementById("handData");
   var handString = "";
