@@ -88,17 +88,17 @@ var betweenNotes = false;
 LeapManager.adjustLeapValidArea = function() {
     var leapWidth = (this.MAX_WIDTH-this.MIN_WIDTH);
     var leapHeight = (this.MAX_HEIGHT-this.MIN_HEIGHT);
-    if(window.innerWidth/window.innerHeight >= leapWidth/leapHeight) {
+    if(window.innerWidth/MakerViz.PLAYAREA_HEIGHT >= leapWidth/leapHeight) {
         LeapManager.minValidWidth = LeapManager.MIN_WIDTH;
         LeapManager.maxValidWidth = LeapManager.MAX_WIDTH;
 
-        var leapValidHeight = window.innerHeight*leapWidth/window.innerWidth
+        var leapValidHeight = MakerViz.PLAYAREA_HEIGHT*leapWidth/window.innerWidth
         var leapUselessMargin = (leapHeight - leapValidHeight)/2;
         this.minValidHeight = this.MIN_HEIGHT+leapUselessMargin;
         this.maxValidHeight = this.MAX_HEIGHT-leapUselessMargin;
     }
     else {
-        var leapValidWidth = window.innerWidth*leapHeight/window.innerHeight
+        var leapValidWidth = window.innerWidth*leapHeight/MakerViz.PLAYAREA_HEIGHT
         var leapUselessMargin = (leapWidth - leapValidWidth)/2;
         this.minValidWidth = this.MIN_WIDTH+leapUselessMargin;
         this.maxValidWidth = this.MAX_WIDTH-leapUselessMargin;
@@ -108,9 +108,7 @@ LeapManager.adjustLeapValidArea = function() {
     }
     this.semitoneHeight = (this.maxValidHeight-this.minValidHeight)/(LeapManager.NUMBER_OF_TONES);
 }
-//Call this method when loading the website.
-LeapManager.adjustLeapValidArea();
-window.addEventListener("resize", LeapManager.adjustLeapValidArea.bind(LeapManager));
+
 
 /**
  * Maps palm height to a tone.
@@ -255,6 +253,23 @@ LeapManager.isFlippingHand = function(handFrame, previousFrame) {
 }
 
 /**
+ * Removes all hands in handArray which are not in hands array.
+ * @param  {[type]} hands [description]
+ * @return {[type]}       [description]
+ */
+LeapManager.cleanHands = function(hands) {
+    var newHandArray = [];
+    for(var i = 0; i < this.handArray.length; ++i) {
+        var isInFrame = false;
+        for(var j = 0; j < hands.length; ++j) {
+            if(this.handArray[i].handId === hands[j].id) isInFrame = true;
+        }
+        if(isInFrame) newHandArray.push(this.handArray[i]); 
+    }
+    this.handArray = newHandArray;
+}
+
+/**
  * When we get information about an specific hand, process it.
  * @param  {[type]} handFrame json containing a frame information of a specific 
  *                            hand, provided by the leap motion library.
@@ -305,6 +320,8 @@ Leap.loop(controllerOptions, function(frame) {
   for(var i = 0; i < frame.hands.length; ++i) {
       LeapManager.processHand(frame.hands[i], LeapManager.previousFrame);
   }
+
+  LeapManager.cleanHands(frame.hands);
 
   var handOutput = document.getElementById("handData");
   var handString = "";

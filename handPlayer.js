@@ -354,5 +354,3 @@ HandPlayer.processTones = function() {
 
     return true;
 }
-
-setInterval(HandPlayer.processTones.bind(HandPlayer), HandPlayer.INTERVAL_TIME);

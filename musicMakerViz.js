@@ -12,6 +12,8 @@ MakerViz.MARGIN_BETWEEN_BARS = 5;
 //Constant containing render time.
 MakerViz.RENDER_INTERVAL_TIME = 300;
 
+MakerViz.PLAYAREA_HEIGHT = window.innerHeight - LeapManager.INSTRUMENT_LIST.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS);
+
 MakerViz.adjustSVGArea = function() {
     d3.select(".svg-tag").remove();
 
@@ -20,13 +22,21 @@ MakerViz.adjustSVGArea = function() {
         .attr("height", window.innerHeight)
         .attr("class", "svg-tag");
 
-    svg.append("g").attr("class", "circle-container");
-    svg.append("g").attr("class", "tail-container");
+    var playableHeight = MakerViz.PLAYAREA_HEIGHT;
+
+    var playAreaContainer = svg.append("g")
+        .attr("width", window.innerWidth)
+        .attr("height", playableHeight)
+        .attr("class", "play-area")
+        .attr("transform", "translate(0," + (window.innerHeight - playableHeight) + ")");
+
+    playAreaContainer.append("g").attr("class", "circle-container");
+    playAreaContainer.append("g").attr("class", "tail-container");
 
     this.printSafeZone();
 
-    this.printLines(LeapManager.NUMBER_OF_TONES, window.innerWidth, window.innerHeight);
-    svg.append("g").attr("class", "speech-ballons");
+    this.printLines(LeapManager.NUMBER_OF_TONES, window.innerWidth, playableHeight);
+    playAreaContainer.append("g").attr("class", "speech-ballons");
 
     //this.printVoronoi();
 }
@@ -216,24 +226,25 @@ MakerViz.printPattern = function(instrumentBarContainer) {
         .style("fill", "white");
 }
 
+
 /**
  * In charge of printing the zone where there are no sound.
  */
 MakerViz.printSafeZone = function() {
     var marginPercent = Math.max(LeapManager.NO_TONE_MARGIN, 0)*100/(LeapManager.maxValidWidth-LeapManager.minValidWidth);  
     var marginInPixels = marginPercent*window.innerWidth/100;
-    d3.select(".svg-tag").append("rect")
+    d3.select(".play-area").append("rect")
         .attr("x", 0)
         .attr("y", 0)
         .attr("width", marginInPixels + "px")
-        .attr("height", window.innerHeight + "px")
+        .attr("height", MakerViz.PLAYAREA_HEIGHT + "px")
         .style("fill", "#BB3E4F");
 
-    d3.select(".svg-tag").append("rect")
+    d3.select(".play-area").append("rect")
         .attr("x", (window.innerWidth - marginInPixels) + "px")
         .attr("y", 0)
         .attr("width", marginInPixels + "px")
-        .attr("height", window.innerHeight + "px")
+        .attr("height", MakerViz.PLAYAREA_HEIGHT + "px")
         .style("fill", "#BB3E4F");
 }
 
@@ -246,7 +257,8 @@ MakerViz.printSafeZone = function() {
  */
 MakerViz.printLines = function(numLines, width, totalHeight) {
     var linesContainer = 
-        d3.select(".svg-tag").append("g").attr("class", "lines-container");
+        d3.select(".play-area").append("g")
+            .attr("class", "lines-container");
     var lineHeight = totalHeight/numLines;
 
     for(var i = 0; i < numLines; ++i)
@@ -303,7 +315,7 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
     d3.selectAll("circle[r='0px']").remove();
     var circle = d3.select(".circle-container").append("circle")
         .attr("cx", left*window.innerWidth/100 + "px")
-        .attr("cy", (100 - top)*window.innerHeight/100 + "px")
+        .attr("cy", (100 - top)*this.PLAYAREA_HEIGHT/100 + "px")
         .attr("r", this.CIRCLE_RADIUS)
         .attr("class", handFrame.type + "-hand-mark " + (LeapManager.isGrabbing(handFrame) ? "grabbing":"no-grabbing") + " id-" + handFrame.id)
     if(LeapManager.isGrabbing(handFrame)) circle.transition()
@@ -322,15 +334,11 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
             .duration(1000)
             .attr("r", "0px");
 
-    this.drawSpeechBallon(handFrame.id, left*window.innerWidth/100, (100 - top)*window.innerHeight/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
+    this.drawSpeechBallon(handFrame.id, left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
 }
+
 
 MakerViz.render = function() {
     var insBarContainer = this.printRecordedInstruments();
     this.printPattern(insBarContainer);
 }
-
-
-MakerViz.adjustSVGArea();
-window.addEventListener("resize", MakerViz.adjustSVGArea.bind(MakerViz));
-setInterval(MakerViz.render.bind(MakerViz), MakerViz.RENDER_INTERVAL_TIME);
