@@ -11,8 +11,6 @@ HandPlayer.TEMPO = 200; //beats per minute.
 //Minimum time a record should last.
 HandPlayer.MINIMUM_RECORDING_TIME = 5000;
 
-HandPlayer.INSTRUMENT_PER_HAND = 5;
-
 HandPlayer.NUM_TONES_PATTERN = 67;
 
 //How hard the note hits, from 0-127.
@@ -29,7 +27,7 @@ HandPlayer.recordEnabled = false;
 HandPlayer.timeSinceStartingToRecord = 0;
 
 //Contains the pattern being generated currently.
-HandPlayer.currentPatternArray = new Array(HandPlayer.INSTRUMENT_PER_HAND*2);
+HandPlayer.currentPatternArray = new Array(LeapManager.INSTRUMENT_LIST.length);
 
 //Are we recording a pattern right now?
 HandPlayer.patternRecordingEnabled = true;
@@ -55,7 +53,7 @@ HandPlayer.TONE_GAP = 3;
  * So left hand will use 0 to 4 channels and right hand will use 5 to 9. 
  * @type {Array}
  */
-HandPlayer.recordingArray = new Array(HandPlayer.INSTRUMENT_PER_HAND*2);
+HandPlayer.recordingArray = new Array(LeapManager.INSTRUMENT_LIST.length);
 
 function onsuccess() {
     HandPlayer.midiStreamerLoaded = true;
@@ -122,7 +120,7 @@ HandPlayer.enablePatternRecording = function() {
 
 
 HandPlayer.recordPattern = function(hands) {
-    if(!this.activePatterns[0]) this.activePatterns[0] = {index: 0, pattern: new Array(HandPlayer.INSTRUMENT_PER_HAND*2)};
+    if(!this.activePatterns[0]) this.activePatterns[0] = {index: 0, pattern: new Array(LeapManager.INSTRUMENT_LIST.length)};
     this.record(this.activePatterns[0].index, hands, this.activePatterns[0].pattern);
 }
 
@@ -138,7 +136,7 @@ HandPlayer.record = function(toneIndex, hands, destArray) {
     for(var i = 0; i < this.recordingArray.length; ++i) {
         if(lHand !== null && i == hands[lHand].instrumentIndex) 
             this.applyCurrentTone(toneIndex, i, hands[lHand].currentTone, destArray);
-        else if(rHand !== null && i == hands[rHand].instrumentIndex + HandPlayer.INSTRUMENT_PER_HAND) 
+        else if(rHand !== null && i == hands[rHand].instrumentIndex + LeapManager.INSTRUMENT_LIST.length) 
             this.applyCurrentTone(toneIndex, i, hands[rHand].currentTone, destArray);
         else if(!destArray[i] || !destArray[i][toneIndex]) this.addSilence(toneIndex, i, destArray);
     }
@@ -241,7 +239,7 @@ HandPlayer.generateMidiFile = function() {
 
     for(var i = 0; i < LeapManager.INSTRUMENT_LIST.length; ++i) {
         track.setInstrument(i, LeapManager.INSTRUMENT_LIST[i].id);
-        track.setInstrument(i+HandPlayer.INSTRUMENT_PER_HAND, LeapManager.INSTRUMENT_LIST[i].id);
+        track.setInstrument(i+LeapManager.INSTRUMENT_LIST.length, LeapManager.INSTRUMENT_LIST[i].id);
     }
 
     //TODO: Erase.
@@ -288,7 +286,7 @@ HandPlayer.recordActivePatterns = function(recordingArray) {
     for(var i = 0; i < this.activePatterns.length; ++i) {
         var activePattern = this.activePatterns[i];
         
-        for(var j = 0; j < HandPlayer.INSTRUMENT_PER_HAND*2; ++j) {
+        for(var j = 0; j < LeapManager.INSTRUMENT_LIST.length; ++j) {
             var cIndex = activePattern.index;
             recordingArray[j][recordingArray[j].length-1].tones = 
                 recordingArray[j][recordingArray[j].length-1].tones.concat(
@@ -309,10 +307,10 @@ HandPlayer.playActivePatterns = function() {
     for(var i = 0; i < this.activePatterns.length; ++i) {
         var activePattern = this.activePatterns[i];
         cIndex = activePattern.index;
-        for(var j = 0; j < HandPlayer.INSTRUMENT_PER_HAND*2; ++j) {
+        for(var j = 0; j < LeapManager.INSTRUMENT_LIST.length; ++j) {
             var tones = activePattern.pattern[j][cIndex].tones;
             for(var k= 0; k < tones-length; ++k) {
-                this.playTone(this.getValidTone(tones[k]), j, LeapManager.INSTRUMENT_LIST[j%HandPlayer.INSTRUMENT_PER_HAND].id);
+                this.playTone(this.getValidTone(tones[k]), j, LeapManager.INSTRUMENT_LIST[j%LeapManager.INSTRUMENT_LIST.length].id);
             }
         }
     }

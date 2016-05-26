@@ -7,12 +7,12 @@ MakerViz.SCORE_HEIGHT = window.innerHeight;
 
 MakerViz.PROGRESS_BAR_WMARGIN = 25;
 MakerViz.PROGRESS_BAR_HEIGHT = 25;
-MakerViz.MARGIN_BETWEEN_BARS = 5;
+MakerViz.MARGIN_BETWEEN_BARS = 3;
 
 //Constant containing render time.
 MakerViz.RENDER_INTERVAL_TIME = 300;
 
-MakerViz.PLAYAREA_HEIGHT = window.innerHeight - LeapManager.INSTRUMENT_LIST.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS);
+MakerViz.PLAYAREA_HEIGHT = window.innerHeight - LeapManager.INSTRUMENT_LIST.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2);
 
 MakerViz.adjustSVGArea = function() {
     d3.select(".svg-tag").remove();
@@ -90,7 +90,7 @@ MakerViz.printRecordedInstLimits = function(container) {
         container.append("rect")
             .attr("class", "recorded-ins-rect")
             .attr("x", 0)
-            .attr("y", -MakerViz.MARGIN_BETWEEN_BARS/2)
+            .attr("y", 0)
             .attr("width", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
             .attr("height", MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2);
 }
@@ -143,31 +143,36 @@ MakerViz.printRecordedInstruments = function() {
     for(var inst = 0; inst < pattern.length; ++inst) {
         var color = LeapManager.INSTRUMENT_LIST[inst%LeapManager.INSTRUMENT_LIST.length].color;
         var gContainer = d3.select(".inst-bar-g-" + inst);
+        var lContainer = d3.select(".inst-bar-line-g-" + inst);
         if(gContainer.size() === 0) {
             gContainer = barGroup.append("g")
                 .attr("class", "inst-bar-g-" + inst)
                 .attr("transform", "translate(" + MakerViz.PROGRESS_BAR_WMARGIN + "," + top + ")");
             this.printRecordedInstLimits(gContainer);
 
-            gContainer.append("path")
+            lContainer = gContainer.append("g")
+                .attr("class", "inst-bar-line-g-" + inst)
+                .attr("transform", "translate(0," + MakerViz.MARGIN_BETWEEN_BARS + ")");
+
+            lContainer.append("path")
                 .attr("class", "line")
                 .style("stroke", color);
-            gContainer.append("path")
+            lContainer.append("path")
                 .attr("class", "area")
                 .style("fill", color)
                 .style("stroke", color);
         }
 
-        gContainer.select(".line")
+        lContainer.select(".line")
               .datum(pattern[inst])
               .transition()
               .attr("d", line)
-        gContainer.select(".area")
+        lContainer.select(".area")
                 .datum(pattern[inst])
                 .transition()
                 .attr("d", area)
 
-        top += MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS;
+        top += MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2;
     }
 
     return barGroup;
@@ -201,7 +206,7 @@ MakerViz.printPattern = function(instrumentBarContainer) {
             .attr("x1", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
             .attr("y1", 0)
             .attr("x2", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
-            .attr("y2", HandPlayer.activePatterns[0].pattern.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS))
+            .attr("y2", HandPlayer.activePatterns[0].pattern.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2))
             .attr("class","tempo-line");
     }
 
