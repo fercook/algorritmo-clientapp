@@ -124,20 +124,16 @@ HandPlayer.recordPattern = function(hands) {
     this.record(this.activePatterns[0].index, hands, this.activePatterns[0].pattern);
 }
 
+
 /**
  * Given a certain point in time, record all notes that are played at this time.
  * @param  {[Array]} hands array of hands. We support just two hands (one right 
  * and one left) if more are provident they will be ignored.
  */
 HandPlayer.record = function(toneIndex, hands, destArray) {
-    var lHand = this.getLastHandWithType(hands, "left");
-    var rHand = this.getLastHandWithType(hands, "right");
-
     for(var i = 0; i < this.recordingArray.length; ++i) {
-        if(lHand !== null && i == hands[lHand].instrumentIndex) 
-            this.applyCurrentTone(toneIndex, i, hands[lHand].currentTone, destArray);
-        else if(rHand !== null && i == hands[rHand].instrumentIndex + LeapManager.INSTRUMENT_LIST.length) 
-            this.applyCurrentTone(toneIndex, i, hands[rHand].currentTone, destArray);
+        if(hands.length > 0 && i == hands[0].instrumentIndex) 
+            this.applyCurrentTone(toneIndex, i, hands[0].currentTone, destArray);
         else if(!destArray[i] || !destArray[i][toneIndex]) this.addSilence(toneIndex, i, destArray);
     }
 }

@@ -1,32 +1,29 @@
 body {
-    background-color: #58201D;
+    background-color: white;
     overflow:hidden;
+    margin: 0px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }
 
-#svg-container {
-    width: 100vw;
-    height: 100vh;
-    background-color: #58201D;
+svg {
+    background-color: #f2f0e3;
 }
 
 .horizontal-line {
     stroke: black;
 }
 
-.right-hand-mark {
-    fill: #2A7E43;
-    opacity: 0.6;
-}
-
-.left-hand-mark {
-    fill: #8A812E;
+.hand-mark {
     opacity: 0.6;
 }
 
 .grabbing {
     opacity: 1;
 }
-
 
 .speechB {
     opacity: 0.6;

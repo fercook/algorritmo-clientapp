@@ -9,17 +9,20 @@ MakerViz.PROGRESS_BAR_WMARGIN = 25;
 MakerViz.PROGRESS_BAR_HEIGHT = 25;
 MakerViz.MARGIN_BETWEEN_BARS = 3;
 
+MakerViz.TITLE_SPACE = 130;
+MakerViz.PROGRESS_BAR_HMARGIN = 25;
+
 //Constant containing render time.
 MakerViz.RENDER_INTERVAL_TIME = 300;
 
-MakerViz.PLAYAREA_HEIGHT = window.innerHeight - LeapManager.INSTRUMENT_LIST.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2);
+MakerViz.PLAYAREA_HEIGHT = window.innerHeight - LeapManager.INSTRUMENT_LIST.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2) - MakerViz.TITLE_SPACE - MakerViz.PROGRESS_BAR_HMARGIN*2;
 
 MakerViz.adjustSVGArea = function() {
     d3.select(".svg-tag").remove();
 
     var svg = d3.select("#svg-container").append("svg")
         .attr("width", window.innerWidth)
-        .attr("height", window.innerHeight)
+        .attr("height", window.innerHeight - MakerViz.TITLE_SPACE)
         .attr("class", "svg-tag");
 
     var playableHeight = MakerViz.PLAYAREA_HEIGHT;
@@ -28,7 +31,7 @@ MakerViz.adjustSVGArea = function() {
         .attr("width", window.innerWidth)
         .attr("height", playableHeight)
         .attr("class", "play-area")
-        .attr("transform", "translate(0," + (window.innerHeight - playableHeight) + ")");
+        .attr("transform", "translate(0," + (window.innerHeight - MakerViz.TITLE_SPACE - playableHeight) + ")");
 
     playAreaContainer.append("g").attr("class", "circle-container");
     playAreaContainer.append("g").attr("class", "tail-container");
@@ -38,14 +41,14 @@ MakerViz.adjustSVGArea = function() {
     this.printLines(LeapManager.NUMBER_OF_TONES, window.innerWidth, playableHeight);
     playAreaContainer.append("g").attr("class", "speech-ballons");
 
-    //this.printVoronoi();
+    this.printVoronoi();
 }
 
-/*MakerViz.redrawVoronoi = function() {
+MakerViz.redrawVoronoi = function() {
     this.voronoiPaths = this.voronoiPaths
         .data(this.voronoi(this.vertices), polygon);
 
-    this.voronoiPaths.exit().remove();
+    this.voronoiPaths.exit().transition().attr("fill","blue");
 
     this.voronoiPaths.enter().append("path")
         .attr("d", polygon);
@@ -82,7 +85,7 @@ MakerViz.printVoronoi = function() {
         .clipExtent([[0, 0], [this.SCORE_WIDTH, this.SCORE_HEIGHT]]);
 
     this.redrawVoronoi();
-}*/
+}
 
 MakerViz.printRecordedInstLimits = function(container) {
     //Only if there is not already a rect.
@@ -138,7 +141,7 @@ MakerViz.printRecordedInstruments = function() {
     x.domain([0, HandPlayer.NUM_TONES_PATTERN-1]);
     y.domain([0, LeapManager.NUMBER_OF_TONES]);
 
-    var top = 0;
+    var top = MakerViz.PROGRESS_BAR_HMARGIN;
 
     for(var inst = 0; inst < pattern.length; ++inst) {
         var color = LeapManager.INSTRUMENT_LIST[inst%LeapManager.INSTRUMENT_LIST.length].color;
@@ -200,7 +203,7 @@ MakerViz.printPattern = function(instrumentBarContainer) {
     else {
         barGroup = instrumentBarContainer.append("g")
             .attr("class", "tempo-line-group")
-            .attr("transform", "translate(" + MakerViz.PROGRESS_BAR_WMARGIN + ",0)");
+            .attr("transform", "translate(" + MakerViz.PROGRESS_BAR_WMARGIN + "," + MakerViz.PROGRESS_BAR_HMARGIN + ")");
 
         barGroup.append("svg:line")
             .attr("x1", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
@@ -314,7 +317,7 @@ MakerViz.drawSpeechBallon = function(handid, left, top, instrumentName) {
 
 MakerViz.updateHandOnScreen = function(handFrame, handState) {
     var left = Math.max(handFrame.palmPosition[0] - LeapManager.minValidWidth, 0)*100/(LeapManager.maxValidWidth-LeapManager.minValidWidth);
-    var top = Math.max(handFrame.palmPosition[1] - LeapManager.minValidHeight, 0)*100/(LeapManager.maxValidHeight-LeapManager.minValidHeight);
+    var top = Math.min(Math.max(handFrame.palmPosition[1] - LeapManager.minValidHeight, 0)*100/(LeapManager.maxValidHeight-LeapManager.minValidHeight), 100);
     d3.selectAll("circle[cx='" + -this.CIRCLE_RADIUS + "px']").remove();
     d3.selectAll(".no-grabbing.id-" + handFrame.id).remove();
     d3.selectAll("circle[r='0px']").remove();
@@ -322,7 +325,8 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
         .attr("cx", left*window.innerWidth/100 + "px")
         .attr("cy", (100 - top)*this.PLAYAREA_HEIGHT/100 + "px")
         .attr("r", this.CIRCLE_RADIUS)
-        .attr("class", handFrame.type + "-hand-mark " + (LeapManager.isGrabbing(handFrame) ? "grabbing":"no-grabbing") + " id-" + handFrame.id)
+        .attr("class", "hand-mark " + (LeapManager.isGrabbing(handFrame) ? "grabbing":"no-grabbing") + " id-" + handFrame.id)
+        .style("fill", LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].color);
     if(LeapManager.isGrabbing(handFrame)) circle.transition()
             .duration(left*20)
             .ease("linear")

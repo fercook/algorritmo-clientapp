@@ -1,6 +1,7 @@
 var LeapManager = {};
 
 //Constants containing the palm height range that leap motion is able to recognize.
+
 LeapManager.MIN_HEIGHT = 80;
 LeapManager.MAX_HEIGHT = 400;
 
@@ -13,7 +14,7 @@ LeapManager.MAX_WIDTH = 150;
 //to play tones.
 //This allows the user to stop and continue playing a tone very fast, without changing
 //the playing gesture.
-LeapManager.NO_TONE_MARGIN = 50;
+LeapManager.NO_TONE_MARGIN = 130;
 
 //Variables containing the palm height range accepted as a input. 
 //This range will depend on the screen aspect ratio, defining this way a better 
@@ -137,6 +138,7 @@ LeapManager.isPinching = function(hand) {
     return hand.pinchStrength >= LeapManager.PINCH_THRESHOLD;
 }
 
+
 /**
  * Marks the current hand state as not pinching. This means that the pinching
  * gesture ended.
@@ -146,6 +148,15 @@ LeapManager.markAsNonPinching = function(hand) {
     if(hand.justPinched) console.log("Pinch gesture ends.");
     hand.justPinched = false;
 }
+
+
+/**
+ * Removes all hands registered in the handArray.
+ */
+LeapManager.removeCurrentHands = function() {
+    this.handArray = [];
+}
+
 
 /**
  * Given a  json containing a frame for a hand, adds this hand to our system.
@@ -327,6 +338,7 @@ Leap.loop(controllerOptions, function(frame) {
     }
 
     if(handState !== undefined) LeapManager.processHand(handFrame, handState, LeapManager.previousFrame);
+    else LeapManager.removeCurrentHands();
 
   var handOutput = document.getElementById("handData");
   var handString = "";
