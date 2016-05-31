@@ -17,6 +17,15 @@ ParticleManager.safeZoneOptions = {
     sizeRandomness: 25
 };
 
+/**
+ * Initial coordinates for the particle system. Pointing to a position out of
+ * camera where the user cannot see it.
+ * @type {[type]}
+ */
+ParticleManager.HIDDEN_X = -100;
+ParticleManager.HIDDEN_Y = -100;
+
+
 ParticleManager.playOptions = {
     position: new THREE.Vector3(0, 0, 0),
     positionRandomness: 2.11,
@@ -49,12 +58,14 @@ ParticleManager.safeZoneSpawnerOptions = {
     verticalSpeed: 1.33,
     timeScale: 0.2
 };
+
 ParticleManager.playSpawnerOptions = {
     spawnRate: 2935,
     horizontalSpeed: 1.5,
     verticalSpeed: 1.33,
     timeScale: 0.6
 };
+
 ParticleManager.stopSpawnerOptions = {
     spawnRate: 10,
     horizontalSpeed: 1.5,
@@ -67,11 +78,7 @@ ParticleManager.ON_SAFE_ZONE = 0;
 ParticleManager.PLAYING = 1;
 ParticleManager.STOPPED = 2;
 
-ParticleManager.userState = {
-    position: [0, 0, 0],
-    instrumentIndex: 0,
-    state:  ParticleManager.ON_SAFE_ZONE
-};
+ParticleManager.userState = undefined;
 
 ParticleManager.stateOptions = {};
 ParticleManager.stateOptions[ParticleManager.ON_SAFE_ZONE] = ParticleManager.safeZoneOptions;
@@ -100,6 +107,8 @@ ParticleManager.loadCanvasParticles = function() {
             scene, renderer, clock = new THREE.Clock(true), container,
             options, spawnerOptions, particleSystem;
         var mousePos;
+        //Initialize user information.
+        this.clearUserInformation();
         init();
         animate();
         function init() {
@@ -173,7 +182,7 @@ ParticleManager.updateUserInformation = function(newX, newY, newState, instIndex
 
 ParticleManager.clearUserInformation = function() {
     ParticleManager.userState = {
-        position: [0, 0, 0],
+        position: [ParticleManager.HIDDEN_X, ParticleManager.HIDDEN_Y, 0],
         instrumentIndex: 0,
         state:  ParticleManager.STOPPED
     };

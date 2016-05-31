@@ -1,6 +1,6 @@
 var MakerViz = {};
 
-MakerViz.CIRCLE_RADIUS = 20;
+MakerViz.CIRCLE_RADIUS = 10;
 
 MakerViz.SCORE_WIDTH = window.innerWidth;
 MakerViz.SCORE_HEIGHT = window.innerHeight;
@@ -42,6 +42,7 @@ MakerViz.adjustSVGArea = function() {
     playAreaContainer.append("g").attr("class", "speech-ballons");
 
     //this.printVoronoi();
+    this.drawIndications();
 }
 
 /*MakerViz.redrawVoronoi = function() {
@@ -315,13 +316,39 @@ MakerViz.drawSpeechBallon = function(handid, left, top, instrumentName) {
         .style("opacity", "0");
 }
 
+/**
+ * Variable containing the id of the timeout set to delete the user pointer
+ * when we don't know anything about its hands during a period of time.
+ * @type {[type]}
+ */
+MakerViz.currentHandTimeoutId = undefined;
+
+/**
+ * Function in charge of cleaning user pointer.
+ */
+MakerViz.clearUserPointer = function() {
+    var circle = d3.select("circle.hand-mark");
+    if(circle.size() === 1) circle.transition()
+            .duration(1000)
+            .attr("r", "0px");
+    ParticleManager.clearUserInformation();
+    
+    //Show info.
+    d3.select("image.main-info-img")
+        .transition()
+            .duration(2000)
+            .attr("opacity", 1);
+};
 
 MakerViz.updateHandOnScreen = function(handFrame, handState) {
+    //Hide info.
+    d3.select("image.main-info-img").attr("opacity", 0);
+    
+    if(this.currentHandTimeoutId) clearTimeout(this.currentHandTimeoutId);
+
     var left = Math.max(handFrame.palmPosition[0] - LeapManager.minValidWidth, 0)*100/(LeapManager.maxValidWidth-LeapManager.minValidWidth);
     var top = Math.min(Math.max(handFrame.palmPosition[1] - LeapManager.minValidHeight, 0)*100/(LeapManager.maxValidHeight-LeapManager.minValidHeight), 100);
-    d3.selectAll("circle[cx='" + -this.CIRCLE_RADIUS + "px']").remove();
-    d3.selectAll(".no-grabbing.id-" + handFrame.id).remove();
-    d3.selectAll("circle[r='0px']").remove();
+    d3.selectAll("circle.hand-mark").remove();
     var circle = d3.select(".circle-container").append("circle")
         .attr("cx", left*window.innerWidth/100 + "px")
         .attr("cy", (100 - top)*this.PLAYAREA_HEIGHT/100 + "px")
@@ -329,29 +356,17 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
         .attr("class", "hand-mark " + (LeapManager.isGrabbing(handFrame) ? "grabbing":"no-grabbing") + " id-" + handFrame.id)
         .style("fill", LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].color);
     if(LeapManager.isGrabbing(handFrame)) {
-        circle.transition()
-            .duration(left*20)
-            .ease("linear")
-            .attr("cx", -this.CIRCLE_RADIUS + "px")
-            .attrTween("r", 
-                function() { 
-                    return function(){ 
-                        return Math.max(Math.random()*(MakerViz.CIRCLE_RADIUS-3), 1);
-                    } 
-                }
-            );
         ParticleManager.updateUserInformation(left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, ParticleManager.PLAYING, handState.instrumentIndex);
     }
     else {
-        circle.transition()
-            .delay(200)
-            .duration(1000)
-            .attr("r", "0px");
         ParticleManager.updateUserInformation(left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, ParticleManager.STOPPED, handState.instrumentIndex);
     }
 
     if(!LeapManager.isOnPlayingZone(handFrame.palmPosition[0])) 
         ParticleManager.updateUserInformation(left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, ParticleManager.ON_SAFE_ZONE, handState.instrumentIndex);
+
+    this.currentHandTimeoutId = 
+        setTimeout(function() { MakerViz.clearUserPointer(); }, 200);
 
     this.drawSpeechBallon(handFrame.id, left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
 }
@@ -360,4 +375,16 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
 MakerViz.render = function() {
     var insBarContainer = this.printRecordedInstruments();
     this.printPattern(insBarContainer);
+}
+
+
+MakerViz.drawIndications = function() {
+    d3.select(".svg-tag").append("image")
+        .attr("href", "imgs/main-info.png")
+        .attr("class", "main-info-img")
+        .attr("width", window.innerWidth*2/4)
+        .attr("height", window.innerHeight*2/4)
+        .attr("x", window.innerWidth/4)
+        .attr("y", window.innerHeight/4)
+        .attr("preserveAspectRatio");
 }
