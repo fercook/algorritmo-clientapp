@@ -41,10 +41,10 @@ MakerViz.adjustSVGArea = function() {
     this.printLines(LeapManager.NUMBER_OF_TONES, window.innerWidth, playableHeight);
     playAreaContainer.append("g").attr("class", "speech-ballons");
 
-    this.printVoronoi();
+    //this.printVoronoi();
 }
 
-MakerViz.redrawVoronoi = function() {
+/*MakerViz.redrawVoronoi = function() {
     this.voronoiPaths = this.voronoiPaths
         .data(this.voronoi(this.vertices), polygon);
 
@@ -63,9 +63,9 @@ MakerViz.redrawVoronoi = function() {
 MakerViz.voronoiPaths = undefined;
 
 MakerViz.vertices = undefined;
-MakerViz.voronoi = undefined;
+MakerViz.voronoi = undefined;*/
 
-MakerViz.printVoronoi = function() {
+/*MakerViz.printVoronoi = function() {
     this.vertices = d3.range(2000).map(function(d) {
         return [Math.random() * MakerViz.SCORE_WIDTH, Math.random() * MakerViz.SCORE_HEIGHT];
     });
@@ -85,7 +85,7 @@ MakerViz.printVoronoi = function() {
         .clipExtent([[0, 0], [this.SCORE_WIDTH, this.SCORE_HEIGHT]]);
 
     this.redrawVoronoi();
-}
+}*/
 
 MakerViz.printRecordedInstLimits = function(container) {
     //Only if there is not already a rect.
@@ -239,7 +239,8 @@ MakerViz.printPattern = function(instrumentBarContainer) {
  * In charge of printing the zone where there are no sound.
  */
 MakerViz.printSafeZone = function() {
-    var marginPercent = Math.max(LeapManager.NO_TONE_MARGIN, 0)*100/(LeapManager.maxValidWidth-LeapManager.minValidWidth);  
+    var leapWidth = LeapManager.MAX_WIDTH - LeapManager.MIN_WIDTH;
+    var marginPercent = Math.max(LeapManager.NO_TONE_MARGIN_PERCENT*leapWidth/100, 0)*100/(LeapManager.maxValidWidth-LeapManager.minValidWidth);  
     var marginInPixels = marginPercent*window.innerWidth/100;
     d3.select(".play-area").append("rect")
         .attr("x", 0)
@@ -283,14 +284,14 @@ MakerViz.drawSpeechBallon = function(handid, left, top, instrumentName) {
     d3.selectAll(".speechB.id-" + handid).remove();
     d3.selectAll(".instrumentImg.id-" + handid).remove();
     var speechB = d3.select(".speech-ballons").append("image")
-        .attr("href", "./imgs/speechB.png")
+        .attr("href", "imgs/speechB.png")
         .attr("class", "id-" + handid + " speechB")
         .attr("width", "100px")
         .attr("height", "100px")
         .attr("x", left - 100)
         .attr("y", top - 100);
     var instrumentImg = d3.select(".speech-ballons").append("image")
-        .attr("href", "./imgs/" + instrumentName + ".png")
+        .attr("href", "imgs/" + instrumentName + ".png")
         .attr("class", "id-" + handid + " instrumentImg")
         .attr("width", "40px")
         .attr("height", "40px")
@@ -327,7 +328,8 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
         .attr("r", this.CIRCLE_RADIUS)
         .attr("class", "hand-mark " + (LeapManager.isGrabbing(handFrame) ? "grabbing":"no-grabbing") + " id-" + handFrame.id)
         .style("fill", LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].color);
-    if(LeapManager.isGrabbing(handFrame)) circle.transition()
+    if(LeapManager.isGrabbing(handFrame)) {
+        circle.transition()
             .duration(left*20)
             .ease("linear")
             .attr("cx", -this.CIRCLE_RADIUS + "px")
@@ -338,10 +340,18 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
                     } 
                 }
             );
-    else circle.transition()
+        ParticleManager.updateUserInformation(left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, ParticleManager.PLAYING, handState.instrumentIndex);
+    }
+    else {
+        circle.transition()
             .delay(200)
             .duration(1000)
             .attr("r", "0px");
+        ParticleManager.updateUserInformation(left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, ParticleManager.STOPPED, handState.instrumentIndex);
+    }
+
+    if(!LeapManager.isOnPlayingZone(handFrame.palmPosition[0])) 
+        ParticleManager.updateUserInformation(left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, ParticleManager.ON_SAFE_ZONE, handState.instrumentIndex);
 
     this.drawSpeechBallon(handFrame.id, left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
 }

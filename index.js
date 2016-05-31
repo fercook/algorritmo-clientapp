@@ -14,7 +14,7 @@ LeapManager.MAX_WIDTH = 150;
 //to play tones.
 //This allows the user to stop and continue playing a tone very fast, without changing
 //the playing gesture.
-LeapManager.NO_TONE_MARGIN = 130;
+LeapManager.NO_TONE_MARGIN_PERCENT = 15;
 
 //Variables containing the palm height range accepted as a input. 
 //This range will depend on the screen aspect ratio, defining this way a better 
@@ -32,7 +32,7 @@ LeapManager.maxValidHeight = LeapManager.MAX_HEIGHT;
 //The leap motion library provides a percentage indicating how possible it's the user
 //to be doing a specific gesture. This rate goes from 0 to 1.
 LeapManager.GRAB_THRESHOLD = 0.8;
-LeapManager.PINCH_THRESHOLD = 0.6;
+LeapManager.PINCH_THRESHOLD = 0.8;
 
 /**
  * Number of tones used, we will paint as many line intervals as tones, and this
@@ -81,6 +81,14 @@ var pauseOnGesture = false;
 var controllerOptions = {enableGestures: true};
 var handId = -1;
 var betweenNotes = false;
+
+
+/**
+ * Given a color with format 0xfe40e0 returns #fe40e0.
+ */
+LeapManager.hashToHexadecimal = function(color) {
+  return "0x" + color.substring(1);
+}
 
 /**
  * This method adjust the limits of the valid area. This is the interactive area 
@@ -252,8 +260,9 @@ LeapManager.changeToNextIntrument = function(handType, handState) {
  * @return {Boolean}  
  */
 LeapManager.isOnPlayingZone = function(palmWidth) {
-  if(palmWidth < LeapManager.MIN_WIDTH + LeapManager.NO_TONE_MARGIN || 
-    palmWidth > LeapManager.MAX_WIDTH - LeapManager.NO_TONE_MARGIN) return false;
+  var leapWidth = LeapManager.MAX_WIDTH - LeapManager.MIN_WIDTH;
+  if(palmWidth < LeapManager.MIN_WIDTH + LeapManager.NO_TONE_MARGIN_PERCENT*leapWidth/100 || 
+    palmWidth > LeapManager.MAX_WIDTH - LeapManager.NO_TONE_MARGIN_PERCENT*leapWidth/100) return false;
   return true;
 }
 
@@ -337,7 +346,9 @@ Leap.loop(controllerOptions, function(frame) {
         handState = LeapManager.replaceHand(handFrame);
     }
 
-    if(handState !== undefined) LeapManager.processHand(handFrame, handState, LeapManager.previousFrame);
+    if(handState !== undefined) {
+      LeapManager.processHand(handFrame, handState, LeapManager.previousFrame);
+    }
     else LeapManager.removeCurrentHands();
 
   var handOutput = document.getElementById("handData");

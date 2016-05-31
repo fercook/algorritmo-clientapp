@@ -7,3 +7,5 @@ LeapManager.adjustLeapValidArea();
 window.addEventListener("resize", LeapManager.adjustLeapValidArea.bind(LeapManager));
 
 setInterval(HandPlayer.processTones.bind(HandPlayer), HandPlayer.INTERVAL_TIME);
+
+ParticleManager.loadCanvasParticles();

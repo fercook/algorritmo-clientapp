@@ -62,3 +62,9 @@ path.line {
     stroke: #97978f;
     stroke-width: 7px;
 }
+
+.canvas-container {
+    position: absolute;
+    z-index: 999;
+    top: 0px;
+}
