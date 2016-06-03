@@ -91,7 +91,8 @@ HandPlayer.applyCurrentTone = function(toneIndex, recordingArrayIndex, tone, des
  * at this moment should have a silence. 
  */
 HandPlayer.addSilence = function(toneIndex, recordingArrayIndex, destArray) {
-    if(!destArray[recordingArrayIndex]) destArray[recordingArrayIndex] = [];
+    if(!destArray[recordingArrayIndex]) 
+        destArray[recordingArrayIndex] = [];
 
     var currentInsArray = destArray[recordingArrayIndex];
     currentInsArray[toneIndex] = {tones: [-1], numTimes:1};
@@ -132,7 +133,7 @@ HandPlayer.recordPattern = function(hands) {
  */
 HandPlayer.record = function(toneIndex, hands, destArray) {
     for(var i = 0; i < this.recordingArray.length; ++i) {
-        if(hands.length > 0 && i == hands[0].instrumentIndex) 
+        if(hands.length > 0 && i == hands[0].instrumentIndex && typeof hands[0].currentTone === "number") 
             this.applyCurrentTone(toneIndex, i, hands[0].currentTone, destArray);
         else if(!destArray[i] || !destArray[i][toneIndex]) this.addSilence(toneIndex, i, destArray);
     }
