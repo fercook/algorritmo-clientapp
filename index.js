@@ -2,7 +2,7 @@ var LeapManager = {};
 
 //Constants containing the palm height range that leap motion is able to recognize.
 
-LeapManager.MIN_HEIGHT = 80;
+LeapManager.MIN_HEIGHT = 100;
 LeapManager.MAX_HEIGHT = 400;
 
 //Constants containing the palm width range that leap motion is able to recognize.
@@ -152,10 +152,10 @@ LeapManager.isPinching = function(hand) {
  * gesture ended.
  * @param  {[type]} hand json containing a hand state.
  */
-LeapManager.markAsNonPinching = function(hand) {
+/*LeapManager.markAsNonPinching = function(hand) {
     if(hand.justPinched) console.log("Pinch gesture ends.");
     hand.justPinched = false;
-}
+}*/
 
 
 /**
@@ -243,14 +243,30 @@ LeapManager.isThrowingSpiderWeb = function(handFrame) {
  * Changes the handState instrument to the next one. Instruments are sorted 
  * according to INSTRUMENT_LIST order and rotate accordingly.
  * 
- * @param  {string} handType  If the current hand is a left one or right one.
  * @param  {json} handState Current state of the hand that is changing instrument.
  */
-LeapManager.changeToNextIntrument = function(handType, handState) {
+LeapManager.changeToNextIntrument = function(handState) {
     handState.instrumentIndex = (++handState.instrumentIndex) % LeapManager.INSTRUMENT_LIST.length;
     handState.justPinched = true;
 
     this.currentHandInstrument = handState.instrumentIndex;
+}
+
+/**
+ * Changes the handState instrument to the given one.
+ * 
+ * @param  {integer} instrumentIndex  Index pointing to the position on 
+ *                                    LeapManager.INSTRUMENT_LIST where there is 
+ *                                    the instrument we want to assign.
+ * @param  {json} handState Current state of the hand that is changing instrument.
+ */
+LeapManager.changeToGivenIntrument = function(handState, instrumentIndex) {
+    if(0 <= instrumentIndex && instrumentIndex < LeapManager.INSTRUMENT_LIST.length) {
+       handState.instrumentIndex = instrumentIndex;
+
+       this.currentHandInstrument = handState.instrumentIndex; 
+    }
+    else console.error("changeToGivenIntrument: Trying to assign an instrument which does not exist.")
 }
 
 /**
@@ -309,9 +325,19 @@ LeapManager.processHand = function(handFrame, handState, previousFrame) {
         handState.currentTone = null;
 
         //When pinching we are changing the instrument (if not grabbing).
-        if(this.isPinching(handFrame) && !handState.justPinched) this.changeToNextIntrument(handFrame.type, handState);
-        else if(!this.isPinching(handFrame)) this.markAsNonPinching(handState);
+        /*if(this.isPinching(handFrame) && !handState.justPinched) this.changeToNextIntrument(handState);
+        else if(!this.isPinching(handFrame)) this.markAsNonPinching(handState);*/
     }
+
+    //Instrument selection.
+    if(this.isChangingToInstrument(handFrame, -150))
+        this.changeToGivenIntrument(handState, 0);
+    else if(this.isChangingToInstrument(handFrame, -50))
+        this.changeToGivenIntrument(handState, 1);
+    else if(this.isChangingToInstrument(handFrame, 50))
+        this.changeToGivenIntrument(handState, 2);
+    else if(this.isChangingToInstrument(handFrame, 150))
+        this.changeToGivenIntrument(handState, 3);
 
     /*if(this.isFlippingHand(handFrame, previousFrame)) {
         console.log("Hand flipped!!!");
@@ -326,6 +352,14 @@ LeapManager.processHand = function(handFrame, handState, previousFrame) {
 
     MakerViz.updateHandOnScreen(handFrame, handState);
 }
+
+/**
+ * Given a handFrame and a given point on the x coordinates. Returns true if
+ * this hand is changing to the instrument identified by this xPoint.
+ */
+LeapManager.isChangingToInstrument = function(handFrame, xPoint) {
+    return CommonGestureManager.checkColorSelection(handFrame, xPoint);
+};
 
 //Leap loop. It will receive user interaction using leap motion.
 Leap.loop(controllerOptions, function(frame) {
@@ -351,6 +385,27 @@ Leap.loop(controllerOptions, function(frame) {
     }
     else LeapManager.removeCurrentHands();
 
+    if(LeapManager.isClapping(frame.hands)) LeapManager.finishComposition();
+
     // Store frame for motion functions
     LeapManager.previousFrame = frame;
 });
+
+/**
+ * Returns true if the current user is clapping, given an
+ * array with every hand of the current frame.
+ */
+LeapManager.isClapping = function(frameHands) {
+    if(frameHands.length === 2 && CommonGestureManager.checkClap(frameHands[0], frameHands[1]))
+        return true;
+    return false;
+
+}
+
+/**
+ * Method executed when the composition should finish. Manages song generation 
+ * and page change.
+ */
+LeapManager.finishComposition = function() {
+    console.warn("CLAPPIIING!!!");
+};
