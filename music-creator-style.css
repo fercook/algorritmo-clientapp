@@ -68,3 +68,11 @@ path.line {
     z-index: 999;
     top: 0px;
 }
+
+.current-ints-rect {
+    fill: white;
+}
+
+.shader-rect {
+    opacity: 0.3;
+}

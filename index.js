@@ -51,18 +51,19 @@ LeapManager.INSTRUMENT_LIST = [
     {id: 0,
      name: "acoustic_grand_piano",
      color: "#fe40e0",
+     unselectColor: "grey",
      channel: 0},
     {id: 114,
      name: "steel_drums",
      color: "#1efef6",
+     unselectColor: "grey",
      channel: 1},
     {id: 33,
      name: "electric_bass_finger",
      color: "#febc1d",
+     unselectColor: "grey",
      channel: 2},
-    /*{id: 50,
-     name: "synth_strings_1"},*/
-]
+];
 
 //Array, for each hand we'll have an array.
 LeapManager.handArray = [];

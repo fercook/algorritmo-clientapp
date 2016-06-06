@@ -88,6 +88,7 @@ MakerViz.voronoi = undefined;*/
     this.redrawVoronoi();
 }*/
 
+
 MakerViz.printRecordedInstLimits = function(container) {
     //Only if there is not already a rect.
     if(container.select(".recorded-ins-rect").size() === 0)
@@ -98,6 +99,15 @@ MakerViz.printRecordedInstLimits = function(container) {
             .attr("width", window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2)
             .attr("height", MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2);
 }
+
+
+/**
+ * Given an instrument index returns true if this is the current instrument being
+ * used by the user. False otherwise.
+ */
+MakerViz.isCurrentColor = function(instrumentIndex) {
+    return instrumentIndex === LeapManager.currentHandInstrument;
+};
 
 
 /**
@@ -145,7 +155,8 @@ MakerViz.printRecordedInstruments = function() {
     var top = MakerViz.PROGRESS_BAR_HMARGIN;
 
     for(var inst = 0; inst < pattern.length; ++inst) {
-        var color = LeapManager.INSTRUMENT_LIST[inst%LeapManager.INSTRUMENT_LIST.length].color;
+        var color = this.isCurrentColor(inst) ? 
+            LeapManager.INSTRUMENT_LIST[inst].color : LeapManager.INSTRUMENT_LIST[inst].unselectColor;
         var gContainer = d3.select(".inst-bar-g-" + inst);
         var lContainer = d3.select(".inst-bar-line-g-" + inst);
         if(gContainer.size() === 0) {
@@ -171,10 +182,18 @@ MakerViz.printRecordedInstruments = function() {
               .datum(pattern[inst])
               .transition()
               .attr("d", line)
+              .style("stroke", color);
         lContainer.select(".area")
                 .datum(pattern[inst])
                 .transition()
                 .attr("d", area)
+                .style("fill", color)
+                .style("stroke", color);
+
+        //Ensure that it does not contain the class reserver for the current instrument rectangle.
+        gContainer.select("rect").classed("current-ints-rect", false);
+        //If this is the current selected instrument add the appropriate class to its rect.
+        if(this.isCurrentColor(inst)) gContainer.select("rect").classed("current-ints-rect", true);
 
         top += MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2;
     }
@@ -197,14 +216,27 @@ MakerViz.printPattern = function(instrumentBarContainer) {
     var coef = percentage/100;
 
     var barGroup = d3.select(".tempo-line-group");
-    if(barGroup.size() !== 0) barGroup.select(".tempo-line")
-        .transition()
-            .attr("x1", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
-            .attr("x2", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
+    if(barGroup.size() !== 0) {
+        barGroup.select(".shader-rect")
+            .transition()
+                .attr("width", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
+                .attr("height", HandPlayer.activePatterns[0].pattern.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2));
+        barGroup.select(".tempo-line")
+            .transition()
+                .attr("x1", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
+                .attr("x2", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN));
+            }
     else {
         barGroup = instrumentBarContainer.append("g")
             .attr("class", "tempo-line-group")
             .attr("transform", "translate(" + MakerViz.PROGRESS_BAR_WMARGIN + "," + MakerViz.PROGRESS_BAR_HMARGIN + ")");
+
+        barGroup.append("rect")
+            .attr("class", "shader-rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
+            .attr("height", HandPlayer.activePatterns[0].pattern.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2));
 
         barGroup.append("svg:line")
             .attr("x1", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
@@ -369,13 +401,13 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
         setTimeout(function() { MakerViz.clearUserPointer(); }, 200);
 
     this.drawSpeechBallon(handFrame.id, left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
-}
+};
 
 
 MakerViz.render = function() {
     var insBarContainer = this.printRecordedInstruments();
     this.printPattern(insBarContainer);
-}
+};
 
 
 MakerViz.drawIndications = function() {
@@ -387,4 +419,4 @@ MakerViz.drawIndications = function() {
         .attr("x", window.innerWidth/4)
         .attr("y", window.innerHeight/4)
         .attr("preserveAspectRatio");
-}
+};

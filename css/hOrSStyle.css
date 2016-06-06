@@ -1,0 +1,137 @@
+a { text-decoration: none; color: #352521; }
+a:visited { }
+a:hover,a:focus { text-decoration: underline; }
+a:active { }
+a img { border: none; }
+
+div.clear{clear: both;}
+
+textarea{display: block; width: 100%; height: 200px}
+form label{display: block;}
+form input{ width: 100%; margin-bottom: 6px;}
+
+button:focus{  outline: none;}
+
+a.uplink{ display:block;}
+
+body {  font-family: 'Ubuntu', sans-serif;
+         margin: 0; padding: 0; color: #000;
+     
+
+       /*background: url(imgs/zigzag.png) 0 0 repeat; */}
+
+div#top{ font-size: .9em; padding: 12px ;    }
+div#top img{ vertical-align: middle;      }
+
+#top{
+    width: 800px;
+    margin: 0 auto;
+
+}
+
+
+#suggestion{padding: 4px 80px 10px;}
+
+#content {
+ width: 840px;
+ margin: 0 auto;
+ background-color: #f7f7ed;
+ border-top: 1px solid #EEE;
+ padding-top: 22px;padding-bottom: 80px;
+ box-shadow: 16px 10px 3px #E0E0E0;
+}
+
+#drawingCanvas{
+  display: block;
+  /*width: 90%;*/
+  margin: 0 auto;
+  background-color: #f7f7ed;
+  box-shadow: 16px 10px 3px #E0E0E0;
+}
+
+#listeningelement{
+  
+  margin: 0 auto;
+  background-color: #f7f7ed;
+  box-shadow: 16px 10px 3px #E0E0E0;
+}
+
+div#songtime{width: 1176px; margin: 0 auto; padding-top: 40px; color: orangered; font-size: 24px; font-weight: bold;}
+img#musicplayerviz{display: block; margin: 0 auto; padding-top: 8px;padding-bottom: 140px;}
+
+div#votezone{
+  margin: 0 auto;
+  width: 1400px;
+  display: flex;
+  flex-direction: row;
+}
+
+
+div#votezone img{
+  display: block; margin: 0 auto;
+}
+
+div#shit{
+  flex-grow: 1;
+  
+}
+
+div#swipe{
+  flex-grow: 1;
+}
+
+div#hit{
+  padding-top: 30px;
+  flex-grow: 1;
+}
+
+/*
+.popupfinalpos{
+  left: 550px;
+  transition: left 2.5s ease-in;
+}*/
+
+
+.init{opacity: 1;}
+
+.deactived{opacity: 0.5;}
+
+.beating {
+  opacity: 0.8;
+  animation: pulse .7s ease-in infinite;
+}
+
+.beatingdelay {
+  opacity: 0.8;
+  animation: pulse .7s ease-in infinite;
+  animation-delay: .35s;
+}
+
+@-webkit-keyframes "pulse" {
+ 0% {
+    -webkit-transform: scale(1);
+ }
+ 50% {
+    -webkit-transform: scale(1.08);
+ }
+100% {
+    -webkit-transform: scale(1);
+ }
+}
+
+
+.selectioneffect {
+  animation: grow 1.5s ease-in infinite;
+}
+
+@-webkit-keyframes "grow" {
+ 0% {
+ -webkit-transform: scale(1.2);
+ }
+ 50% {
+    -webkit-transform: scale(1.6);
+ }
+100% {
+  -webkit-transform: scale(2);
+ }
+}
