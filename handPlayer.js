@@ -53,7 +53,7 @@ HandPlayer.TONE_GAP = 3;
  * So left hand will use 0 to 4 channels and right hand will use 5 to 9. 
  * @type {Array}
  */
-HandPlayer.recordingArray = new Array(LeapManager.INSTRUMENT_LIST.length);
+//HandPlayer.recordingArray = new Array(LeapManager.INSTRUMENT_LIST.length);
 
 function onsuccess() {
     HandPlayer.midiStreamerLoaded = true;
@@ -132,7 +132,7 @@ HandPlayer.recordPattern = function(hands) {
  * and one left) if more are provident they will be ignored.
  */
 HandPlayer.record = function(toneIndex, hands, destArray) {
-    for(var i = 0; i < this.recordingArray.length; ++i) {
+    for(var i = 0; i < LeapManager.INSTRUMENT_LIST.length; ++i) {
         if(hands.length > 0 && i == hands[0].instrumentIndex && typeof hands[0].currentTone === "number") 
             this.applyCurrentTone(toneIndex, i, hands[0].currentTone, destArray);
         else if(!destArray[i] || !destArray[i][toneIndex]) this.addSilence(toneIndex, i, destArray);
@@ -243,7 +243,7 @@ HandPlayer.generateMidiFile = function() {
     //fakeArray = [];
     //fakeArray[fakeArray.length] = [{id: 21, numTimes:2000}];
 
-    this.fillTrackWithArray(track, this.recordingArray);
+    this.fillTrackWithArray(track, this.activePatterns[0].pattern);
     //fillTrackWithArray(track, fakeArray);
 
     var str = file.toBytes();
@@ -257,29 +257,39 @@ HandPlayer.generateMidiFile = function() {
 
     base64String = "data:image/png;base64," + base64String;
 
-    MIDI.Player.loadFile(base64String, function() {
+    /*MIDI.Player.loadFile(base64String, function() {
         console.log("MIDI file generated.");
         //MIDI.Player.start(); // start the MIDI track (you can put this in the loadFile callback)
-        /* MIDI.Player.resume(); // resume the MIDI track from pause.
+         MIDI.Player.resume(); // resume the MIDI track from pause.
             MIDI.Player.pause(); // pause the MIDI track.
-            MIDI.Player.stop();*/
+            MIDI.Player.stop();
     },
     function() {
         console.log("Generating MIDI file.");
     },
     function() {
         console.log("Error generating MIDI file.");
-    }); // load .MIDI from base64 or binary XML request.
+    }); // load .MIDI from base64 or binary XML request.*/
 
+    //this.downloadSong(base64String);
+    this.saveSongUsingLocalStorage(base64String);
+}
+
+
+HandPlayer.downloadSong = function(base64String) {
     //DonwloadFile
     var a = document.createElement('a');
     a.download = 'sample.mid';
     a.href = base64String;
     a.click();
-}
+};
 
 
-HandPlayer.recordActivePatterns = function(recordingArray) {
+HandPlayer.saveSongUsingLocalStorage = function(base64String) {
+    localStorage.setItem("userGeneratedSong", base64String);
+};
+
+/*HandPlayer.recordActivePatterns = function(recordingArray) {
     for(var i = 0; i < this.activePatterns.length; ++i) {
         var activePattern = this.activePatterns[i];
         
@@ -290,7 +300,7 @@ HandPlayer.recordActivePatterns = function(recordingArray) {
                     activePattern.pattern[j][cIndex].tones);
         }
     }
-}
+}*/
 
 
 HandPlayer.moveActivePatternsForward = function() {

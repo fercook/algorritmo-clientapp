@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Music Generator</title>
+        <link rel="stylesheet" type="text/css" href="css/hOrSStyle.css">
+    </head>
+    <body>
+        <div id="top">
+            <img src="imgs/algorritmo-logo.jpg" >
+        </div>
+        
+        <img id="msgpopup"/>
+        <div id="listeningelement" >
+            <div id="listeningwrapper"  >
+            <div id="songtime"></div>
+            <img id="musicplayerviz" src="imgs/hOrS/musicplayerviz.jpg" />
+            <div id="votezone" >
+                <div id="shit" class="beating"> 
+                  <img id="shiticon" src="imgs/hOrS/shit.jpg" width="70%"  />
+                </div>
+
+                <div id="swipe" > 
+                    <img id="swipeicon" src="imgs/hOrS/swipetovote.jpg" width="70%" />
+                </div>
+
+                <div id="hit" class="beatingdelay" > 
+                    <img id="hiticon" src="imgs/hOrS/shit.jpg" width="70%"/>
+                </div>
+            </div>
+        </div>
+        <div id="leapMotionData"></div>
+    </body>
+
+    <script src="http://js.leapmotion.com/leap-0.6.3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.16/d3.js"></script>
+    <script src="libs/underscore-min.js"></script>
+    <script src="libs/MIDI.js"></script>
+    <script src="./MIDI-CHANGES.js"></script>
+    <script src="libs/jsmidgen.js"></script>
+
+    <script src="hOrSPageSrc/hOrSManager.js"></script>
+    <script src="hOrSPageSrc/hOrSInitializer.js"></script>
+</html>

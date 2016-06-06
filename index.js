@@ -399,7 +399,6 @@ LeapManager.isClapping = function(frameHands) {
     if(frameHands.length === 2 && CommonGestureManager.checkClap(frameHands[0], frameHands[1]))
         return true;
     return false;
-
 }
 
 /**
@@ -408,4 +407,8 @@ LeapManager.isClapping = function(frameHands) {
  */
 LeapManager.finishComposition = function() {
     console.warn("CLAPPIIING!!!");
+    HandPlayer.generateMidiFile();
+
+    //Go to vote page.
+    window.location.href = '/index_HorS.html';
 };
