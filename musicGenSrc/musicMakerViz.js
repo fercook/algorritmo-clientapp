@@ -264,7 +264,11 @@ MakerViz.printPattern = function(instrumentBarContainer) {
             .transition()
                 .attr("x1", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
                 .attr("x2", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN));
-            }
+        barGroup.select(".counter")
+            .transition()
+                .attr("x", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
+                .text(HandPlayer.activePatterns[0].index);
+    }
     else {
         barGroup = instrumentBarContainer.append("g")
             .attr("class", "tempo-line-group")
@@ -283,6 +287,12 @@ MakerViz.printPattern = function(instrumentBarContainer) {
             .attr("x2", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
             .attr("y2", HandPlayer.activePatterns[0].pattern.length * (MakerViz.PROGRESS_BAR_HEIGHT + MakerViz.MARGIN_BETWEEN_BARS*2))
             .attr("class","tempo-line");
+
+        barGroup.append("text")
+            .attr("class", "counter")
+            .attr("x", coef * (window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN))
+            .attr("y", -5)
+            .text(HandPlayer.activePatterns[0].index);
     }
 
     var barMargin = 25;

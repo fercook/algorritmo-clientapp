@@ -40,7 +40,7 @@ MouseManager.mouseoverBehaviour = function() {
 
     MouseManager.processMouseOver(d3.event, fakeHandState);
 
-    if(MusicGenGlobal.isFinishPressed(MouseManager.getPositionPercentage(d3.event))) 
+    if(MouseManager.pressed && MusicGenGlobal.isFinishPressed(MouseManager.getPositionPercentage(d3.event))) 
             MusicGenGlobal.finishComposition();
 };
 

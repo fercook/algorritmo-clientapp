@@ -99,3 +99,10 @@ path.line {
     text-anchor: middle;
     font-family: "Aller Regular", Calibri;
 }
+
+.counter {
+    text-anchor: middle;
+    font-family: "Aller Regular", Calibri;
+    fill: #f15a25;
+    font-size: 20px;
+}
