@@ -75,7 +75,7 @@ LeapManager.currentHandInstrument = 0;
 
 // Store frame for motion functions
 LeapManager.previousFrame = null;
-var paused = false;
+LeapManager.paused = false;
 var pauseOnGesture = false;
 
 // Setup Leap loop with frame callback function
@@ -364,7 +364,7 @@ LeapManager.isChangingToInstrument = function(handFrame, xPoint) {
 
 //Leap loop. It will receive user interaction using leap motion.
 Leap.loop(controllerOptions, function(frame) {
-    if(paused) {
+    if(LeapManager.paused) {
         return; // Skip this update
     }
 
@@ -412,4 +412,15 @@ LeapManager.finishComposition = function() {
 
     //Go to vote page.
     window.location.href = '/index_HorS.html';
+};
+
+/**
+ * Given a hand frame, returns percentages for the current hand position.
+ */
+LeapManager.getPositionPercentage = function(handFrame) {
+    var result = {};
+    result["left"] = Math.max(handFrame.palmPosition[0] - LeapManager.minValidWidth, 0)*100/(LeapManager.maxValidWidth-LeapManager.minValidWidth);
+    result["top"] = 100 - Math.min(Math.max(handFrame.palmPosition[1] - LeapManager.minValidHeight, 0)*100/(LeapManager.maxValidHeight-LeapManager.minValidHeight), 100);
+
+    return result;
 };

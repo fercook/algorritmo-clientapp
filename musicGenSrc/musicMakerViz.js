@@ -378,29 +378,31 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
     
     if(this.currentHandTimeoutId) clearTimeout(this.currentHandTimeoutId);
 
-    var left = Math.max(handFrame.palmPosition[0] - LeapManager.minValidWidth, 0)*100/(LeapManager.maxValidWidth-LeapManager.minValidWidth);
-    var top = Math.min(Math.max(handFrame.palmPosition[1] - LeapManager.minValidHeight, 0)*100/(LeapManager.maxValidHeight-LeapManager.minValidHeight), 100);
+    var positionPercentage = MusicGenGlobal.getPositionPercentage(handFrame);
+
+    var left = positionPercentage.left;
+    var top = positionPercentage.top;
     d3.selectAll("circle.hand-mark").remove();
     var circle = d3.select(".circle-container").append("circle")
         .attr("cx", left*window.innerWidth/100 + "px")
-        .attr("cy", (100 - top)*this.PLAYAREA_HEIGHT/100 + "px")
+        .attr("cy", top*this.PLAYAREA_HEIGHT/100 + "px")
         .attr("r", this.CIRCLE_RADIUS)
-        .attr("class", "hand-mark " + (LeapManager.isGrabbing(handFrame) ? "grabbing":"no-grabbing") + " id-" + handFrame.id)
+        .attr("class", "hand-mark " + (MusicGenGlobal.isPlaying(handFrame) ? "grabbing":"no-grabbing") + " id-" + handFrame.id)
         .style("fill", LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].color);
-    if(LeapManager.isGrabbing(handFrame)) {
-        ParticleManager.updateUserInformation(left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, ParticleManager.PLAYING, handState.instrumentIndex);
+    if(MusicGenGlobal.isPlaying(handFrame)) {
+        ParticleManager.updateUserInformation(left*window.innerWidth/100, top*this.PLAYAREA_HEIGHT/100, ParticleManager.PLAYING, handState.instrumentIndex);
     }
     else {
-        ParticleManager.updateUserInformation(left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, ParticleManager.STOPPED, handState.instrumentIndex);
+        ParticleManager.updateUserInformation(left*window.innerWidth/100, top*this.PLAYAREA_HEIGHT/100, ParticleManager.STOPPED, handState.instrumentIndex);
     }
 
-    if(!LeapManager.isOnPlayingZone(handFrame.palmPosition[0])) 
-        ParticleManager.updateUserInformation(left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, ParticleManager.ON_SAFE_ZONE, handState.instrumentIndex);
+    if(!MusicGenGlobal.isOnPlayingZone(handFrame)) 
+        ParticleManager.updateUserInformation(left*window.innerWidth/100, top*this.PLAYAREA_HEIGHT/100, ParticleManager.ON_SAFE_ZONE, handState.instrumentIndex);
 
     this.currentHandTimeoutId = 
         setTimeout(function() { MakerViz.clearUserPointer(); }, 200);
 
-    this.drawSpeechBallon(handFrame.id, left*window.innerWidth/100, (100 - top)*this.PLAYAREA_HEIGHT/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
+    this.drawSpeechBallon(handState.handId, left*window.innerWidth/100, top*this.PLAYAREA_HEIGHT/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
 };
 
 
