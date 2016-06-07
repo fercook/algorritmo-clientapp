@@ -36,11 +36,36 @@ MusicGenGlobal.getInstrumentChange = function(posPerct) {
     if(posPerct.left <= MakerViz.INST_CHANGE_WIDTH_PERCENT) {
         var instHeight = MakerViz.INST_CHANGE_HEIGHT_PERCENT + MakerViz.INST_CHANGE_HMARGIN_PERCENT;
         var instId = parseInt(posPerct.top / instHeight);
-        if(posPerct.top >= instId*instHeight+MakerViz.INST_CHANGE_HMARGIN_PERCENT) return instId;
+        //We subtract 1, because the first element of the list of boxes is the finish button.
+        if(posPerct.top >= instId*instHeight+MakerViz.INST_CHANGE_HMARGIN_PERCENT) return instId - 1;
     }
     return -1;
 };
 
+/**
+ * Returns true when the current position matches the "finish" button position.
+ */
+MusicGenGlobal.isFinishPressed = function(posPerct) {
+    if(posPerct.left <= MakerViz.INST_CHANGE_WIDTH_PERCENT) {
+        var instHeight = MakerViz.INST_CHANGE_HEIGHT_PERCENT + MakerViz.INST_CHANGE_HMARGIN_PERCENT;
+        //We subtract 1, because the first element of the list of boxes is the finish button.
+        if(posPerct.top >= MakerViz.INST_CHANGE_HMARGIN_PERCENT &&
+            posPerct.top <= MakerViz.INST_CHANGE_HMARGIN_PERCENT+instHeight) return true;
+    }
+    return false;
+};
+
+/**
+ * Method executed when the composition should finish. Manages song generation 
+ * and page change.
+ */
+MusicGenGlobal.finishComposition = function() {
+    console.warn("CLAPPIIING!!!");
+    HandPlayer.generateMidiFile();
+
+    //Go to vote page.
+    window.location.href = '/index_HorS.html';
+};
 
 MakerViz.adjustSVGArea();
 window.addEventListener("resize", MakerViz.adjustSVGArea.bind(MakerViz));

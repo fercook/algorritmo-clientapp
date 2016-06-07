@@ -1,3 +1,9 @@
+@font-face {
+  font-family: Aller Regular;
+  src: local("Aller Regular"),
+       url(../fonts/Aller_Rg.ttf);
+}
+
 body {
     background-color: white;
     overflow:hidden;
@@ -7,6 +13,14 @@ body {
     justify-content: center;
     align-items: center;
     flex-direction: column;
+
+    /* Avoid to be able to select elemens by mouse. */
+    -webkit-user-select: none;
+    -moz-user-select: -moz-none;
+    -ms-user-select: none;
+    user-select: none;
+
+    cursor: none;
 }
 
 svg {
@@ -75,4 +89,13 @@ path.line {
 
 .shader-rect {
     opacity: 0.3;
+}
+
+.finish-button {
+    fill: red;
+}
+
+.finish-label {
+    text-anchor: middle;
+    font-family: "Aller Regular", Calibri;
 }

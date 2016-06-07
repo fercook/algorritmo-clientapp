@@ -39,6 +39,9 @@ MouseManager.mouseoverBehaviour = function() {
     LeapManager.handArray[0] = fakeHandState;
 
     MouseManager.processMouseOver(d3.event, fakeHandState);
+
+    if(MusicGenGlobal.isFinishPressed(MouseManager.getPositionPercentage(d3.event))) 
+            MusicGenGlobal.finishComposition();
 };
 
 MouseManager.processMouseOver = function(mouseEvent, handState) {
@@ -70,7 +73,7 @@ MouseManager.getTone = function(mouseEvent) {
 
     var semitoneHeight = 100/LeapManager.NUMBER_OF_TONES;
 
-    return (100-posPerct.top) / semitoneHeight;
+    return parseInt((100-posPerct.top) / semitoneHeight);
 };
 
 

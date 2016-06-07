@@ -372,7 +372,9 @@ Leap.loop(controllerOptions, function(frame) {
     }
     else LeapManager.removeCurrentHands();
 
-    if(LeapManager.isClapping(frame.hands)) LeapManager.finishComposition();
+    if(LeapManager.isClapping(frame.hands) || 
+        MusicGenGlobal.isFinishPressed(this.getPositionPercentage(handFrame))) 
+            MusicGenGlobal.finishComposition();
 
     // Store frame for motion functions
     LeapManager.previousFrame = frame;
@@ -387,18 +389,6 @@ LeapManager.isClapping = function(frameHands) {
         return true;
     return false;
 }
-
-/**
- * Method executed when the composition should finish. Manages song generation 
- * and page change.
- */
-LeapManager.finishComposition = function() {
-    console.warn("CLAPPIIING!!!");
-    HandPlayer.generateMidiFile();
-
-    //Go to vote page.
-    window.location.href = '/index_HorS.html';
-};
 
 /**
  * Given a hand frame, returns percentages for the current hand position.
