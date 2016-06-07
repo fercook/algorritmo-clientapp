@@ -11,38 +11,40 @@ MouseManager.loadMouseConfig = function() {
             //left button of mouse is the only one that has a odd number (1).
             if(d3.event.buttons%2 === 1) MouseManager.pressed = true;
             console.log("MOUSE DOWN!" + d3.event.buttons + " " + MouseManager.pressed);
-        })
+            this.mouseoverBehaviour();
+        }.bind(this))
         .on("mouseup", function() {
             //IF left click.
             if(d3.event.buttons%2 === 0) MouseManager.pressed = false;
             console.log("MOUSE UP!" + d3.event.buttons + " " + MouseManager.pressed);
-        })
+            this.mouseoverBehaviour();
+        }.bind(this))
         .on("mouseleave", function() {
             MouseManager.pressed = false;
             console.log("MOUSE LEAVE!");
-        })
-        .on("mousemove", function() {
-            var fakeHandState = {
-                handId: 0,
-                instrumentIndex: LeapManager.currentHandInstrument,
-                currentTone: null,
-                channel: LeapManager.INSTRUMENT_LIST[LeapManager.currentHandInstrument].channel,
-                type: "right",
-            };
-            LeapManager.handArray[0] = fakeHandState;
+            this.mouseoverBehaviour();
+        }.bind(this))
+        .on("mousemove", this.mouseoverBehaviour);
+};
 
-            MouseManager.processMouseOver(d3.event, fakeHandState);
 
-            //if(MouseManager.pressed) {}
-            console.log("MOUSE MOVE!");
-        });
+MouseManager.mouseoverBehaviour = function() {
+    var fakeHandState = {
+        handId: 0,
+        instrumentIndex: LeapManager.currentHandInstrument,
+        currentTone: null,
+        channel: LeapManager.INSTRUMENT_LIST[LeapManager.currentHandInstrument].channel,
+        type: "right",
+    };
+    LeapManager.handArray[0] = fakeHandState;
+
+    MouseManager.processMouseOver(d3.event, fakeHandState);
 };
 
 MouseManager.processMouseOver = function(mouseEvent, handState) {
     if(this.pressed && this.isOnPlayingZone(mouseEvent)) {
-        //var tone = this.getTone(mouseEvent);
-        //handState.currentTone = tone;
-        handState.currentTone = null;
+        var tone = this.getTone(mouseEvent);
+        handState.currentTone = tone;
     }
 
     else handState.currentTone = null;
@@ -56,12 +58,16 @@ MouseManager.processMouseOver = function(mouseEvent, handState) {
  */
 MouseManager.isOnPlayingZone = function(mouseEvent) {
     return (mouseEvent.clientY > window.innerHeight - MakerViz.PLAYAREA_HEIGHT && 
-        mouseEvent.clientY < window.innerHeight) && (mouseEvent.clientX > LeapManager.NO_TONE_MARGIN_PERCENT * window.innerWidth &&
-        mouseEvent.clientX < window.innerWidth - LeapManager.NO_TONE_MARGIN_PERCENT * window.innerWidth);
+        mouseEvent.clientY < window.innerHeight) && (mouseEvent.clientX > LeapManager.NO_TONE_MARGIN_PERCENT * window.innerWidth/100 &&
+        mouseEvent.clientX < window.innerWidth - LeapManager.NO_TONE_MARGIN_PERCENT * window.innerWidth/100);
 };
 
-MouseManager.getTone = function(playAreaHeight) {
+MouseManager.getTone = function(mouseEvent) {
+    var posPerct = this.getPositionPercentage(mouseEvent);
 
+    var semitoneHeight = 100/LeapManager.NUMBER_OF_TONES;
+
+    return (100-posPerct.top) / semitoneHeight;
 };
 
 

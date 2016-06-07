@@ -399,8 +399,9 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
     if(!MusicGenGlobal.isOnPlayingZone(handFrame)) 
         ParticleManager.updateUserInformation(left*window.innerWidth/100, top*this.PLAYAREA_HEIGHT/100, ParticleManager.ON_SAFE_ZONE, handState.instrumentIndex);
 
-    this.currentHandTimeoutId = 
-        setTimeout(function() { MakerViz.clearUserPointer(); }, 200);
+    if(MusicGenGlobal.LEAP_ENABLED)
+        this.currentHandTimeoutId = 
+            setTimeout(function() { MakerViz.clearUserPointer(); }, 200);
 
     this.drawSpeechBallon(handState.handId, left*window.innerWidth/100, top*this.PLAYAREA_HEIGHT/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
 };
