@@ -5,6 +5,14 @@ MakerViz.CIRCLE_RADIUS = 10;
 MakerViz.SCORE_WIDTH = window.innerWidth;
 MakerViz.SCORE_HEIGHT = window.innerHeight;
 
+/**
+ * Constants containing the percentage used by each instrument change box on the
+ * score zone.
+ */
+MakerViz.INST_CHANGE_HMARGIN_PERCENT = 5;
+MakerViz.INST_CHANGE_HEIGHT_PERCENT = 15;
+MakerViz.INST_CHANGE_WIDTH_PERCENT = 10;
+
 MakerViz.PROGRESS_BAR_WMARGIN = 25;
 MakerViz.PROGRESS_BAR_HEIGHT = 25;
 MakerViz.MARGIN_BETWEEN_BARS = 3;
@@ -41,8 +49,23 @@ MakerViz.adjustSVGArea = function() {
     this.printLines(LeapManager.NUMBER_OF_TONES, window.innerWidth, playableHeight);
     playAreaContainer.append("g").attr("class", "speech-ballons");
 
+    this.printInstChangeAreas(playAreaContainer);
     //this.printVoronoi();
     this.drawIndications();
+}
+
+MakerViz.printInstChangeAreas = function(playAreaContainer) {
+    var rectX;
+    for(var i = 0; i < LeapManager.INSTRUMENT_LIST.length; ++i) {
+        rectX = i*MakerViz.PLAYAREA_HEIGHT*(MakerViz.INST_CHANGE_HMARGIN_PERCENT+MakerViz.INST_CHANGE_HEIGHT_PERCENT)/100;
+        playAreaContainer.append("rect")
+            .attr("class", "change-inst-rect")
+            .attr("x", 0)
+            .attr("y", rectX + MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_HMARGIN_PERCENT / 100)
+            .attr("width", window.innerWidth*MakerViz.INST_CHANGE_WIDTH_PERCENT / 100)
+            .attr("height", MakerViz.PLAYAREA_HEIGHT*MakerViz.INST_CHANGE_HEIGHT_PERCENT/100)
+            .style("fill", LeapManager.INSTRUMENT_LIST[i].color);
+    }
 }
 
 /*MakerViz.redrawVoronoi = function() {

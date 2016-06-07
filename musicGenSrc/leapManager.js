@@ -261,7 +261,7 @@ LeapManager.changeToNextIntrument = function(handState) {
  *                                    the instrument we want to assign.
  * @param  {json} handState Current state of the hand that is changing instrument.
  */
-LeapManager.changeToGivenIntrument = function(handState, instrumentIndex) {
+LeapManager.changeToGivenInstrument = function(handState, instrumentIndex) {
     if(0 <= instrumentIndex && instrumentIndex < LeapManager.INSTRUMENT_LIST.length) {
        handState.instrumentIndex = instrumentIndex;
 
@@ -331,14 +331,8 @@ LeapManager.processHand = function(handFrame, handState, previousFrame) {
     }
 
     //Instrument selection.
-    if(this.isChangingToInstrument(handFrame, -150))
-        this.changeToGivenIntrument(handState, 0);
-    else if(this.isChangingToInstrument(handFrame, -50))
-        this.changeToGivenIntrument(handState, 1);
-    else if(this.isChangingToInstrument(handFrame, 50))
-        this.changeToGivenIntrument(handState, 2);
-    else if(this.isChangingToInstrument(handFrame, 150))
-        this.changeToGivenIntrument(handState, 3);
+    instIndex = MusicGenGlobal.getInstrumentChange(this.getPositionPercentage(handFrame));
+    if(instIndex >= 0) this.changeToGivenInstrument(handState, instIndex);
 
     /*if(this.isFlippingHand(handFrame, previousFrame)) {
         console.log("Hand flipped!!!");
@@ -353,14 +347,6 @@ LeapManager.processHand = function(handFrame, handState, previousFrame) {
 
     MakerViz.updateHandOnScreen(handFrame, handState);
 }
-
-/**
- * Given a handFrame and a given point on the x coordinates. Returns true if
- * this hand is changing to the instrument identified by this xPoint.
- */
-LeapManager.isChangingToInstrument = function(handFrame, xPoint) {
-    return CommonGestureManager.checkColorSelection(handFrame, xPoint);
-};
 
 //Leap loop. It will receive user interaction using leap motion.
 Leap.loop(controllerOptions, function(frame) {

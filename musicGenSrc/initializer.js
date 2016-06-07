@@ -26,6 +26,21 @@ MusicGenGlobal.getPositionPercentage = function(jockerObject) {
     else return MouseManager.getPositionPercentage(jockerObject);
 };
 
+/**
+ * Given an object with top and left percentages correspondent to the current 
+ * user position, returns the instrument id the user is changing, -1 if he is
+ * outside of the changing area.
+ */
+MusicGenGlobal.getInstrumentChange = function(posPerct) {
+
+    if(posPerct.left <= MakerViz.INST_CHANGE_WIDTH_PERCENT) {
+        var instHeight = MakerViz.INST_CHANGE_HEIGHT_PERCENT + MakerViz.INST_CHANGE_HMARGIN_PERCENT;
+        var instId = parseInt(posPerct.top / instHeight);
+        if(posPerct.top >= instId*instHeight+MakerViz.INST_CHANGE_HMARGIN_PERCENT) return instId;
+    }
+    return -1;
+};
+
 
 MakerViz.adjustSVGArea();
 window.addEventListener("resize", MakerViz.adjustSVGArea.bind(MakerViz));

@@ -46,8 +46,11 @@ MouseManager.processMouseOver = function(mouseEvent, handState) {
         var tone = this.getTone(mouseEvent);
         handState.currentTone = tone;
     }
-
     else handState.currentTone = null;
+
+    //Instrument selection.
+    instIndex = MusicGenGlobal.getInstrumentChange(this.getPositionPercentage(mouseEvent));
+    if(instIndex >= 0) LeapManager.changeToGivenInstrument(handState, instIndex);
 
     MakerViz.updateHandOnScreen(mouseEvent, handState);
 };
