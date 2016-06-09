@@ -63,6 +63,11 @@ LeapManager.INSTRUMENT_LIST = [
      color: "#febc1d",
      unselectColor: "grey",
      channel: 2},
+    {id: 114,
+     name: "steel_drums",
+     color: "#1efef6",
+     unselectColor: "grey",
+     channel: 1}
 ];
 
 //Array, for each hand we'll have an array.

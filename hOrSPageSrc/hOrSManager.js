@@ -39,6 +39,11 @@ HorSManager.loadTrack = function() {
     }
     else track = this.getTrackFromRemoteServer();
 
+    //Set Instruments in appropriate channels.
+    for(var i = 0; i < LeapManager.INSTRUMENT_LIST.length; ++i) {
+        MIDI.programChange(i, LeapManager.INSTRUMENT_LIST[i].id);
+    }
+
     //Player.
     MIDI.Player.loadFile(track, function() {
         console.log("MIDI file loaded.");
@@ -46,6 +51,7 @@ HorSManager.loadTrack = function() {
         MIDI.Player.addListener(function(data) { // set it to your own function!
             //If end of song, start playing from the beginning.
             if(data.now === data.end) {
+                   console.log("End of the song.");
                    MIDI.Player.stop();
                    MIDI.Player.start();
             }
@@ -138,5 +144,4 @@ HorSManager.showSendingMsg = function(){
 HorSManager.hideMsg = function(){
     msgpopup.style.display= 'none';
     listeningwrapper.style.visibility= 'visible';
-
 }
