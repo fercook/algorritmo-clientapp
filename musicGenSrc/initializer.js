@@ -33,13 +33,12 @@ MusicGenGlobal.getPositionPercentage = function(jockerObject) {
  */
 MusicGenGlobal.getInstrumentChange = function(posPerct) {
     var widthChangeArea = MakerViz.PLAYAREA_HEIGHT*
-        (MakerViz.INST_CHANGE_HEIGHT_PERCENT+MakerViz.INST_CHANGE_HMARGIN_PERCENT) / 100
+        (MakerViz.INST_CHANGE_SELECTED_HEIGHT_PERCENT+MakerViz.INST_CHANGE_HMARGIN_PERCENT) / 100
     var currentWidth = posPerct.left*window.innerWidth/100;
     if(currentWidth <= widthChangeArea) {
-        var instHeight = MakerViz.INST_CHANGE_HEIGHT_PERCENT + MakerViz.INST_CHANGE_HMARGIN_PERCENT;
-        var instId = parseInt(posPerct.top / instHeight);
-        //We subtract 1, because the first element of the list of boxes is the finish button.
-        if(posPerct.top >= instId*instHeight+MakerViz.INST_CHANGE_HMARGIN_PERCENT) return instId;
+        var instHeight = MakerViz.INST_CHANGE_SELECTED_HEIGHT_PERCENT + (MakerViz.INST_CHANGE_HMARGIN_PERCENT/2);
+        var instId = parseInt(Math.max((posPerct.top - MakerViz.INST_CHANGE_LABEL_HEIGHT), 0) / instHeight);
+        if(posPerct.top >= instId*instHeight+MakerViz.INST_CHANGE_HMARGIN_PERCENT*1.5+MakerViz.INST_CHANGE_LABEL_HEIGHT) return instId;
     }
     return -1;
 };
@@ -51,7 +50,7 @@ MusicGenGlobal.isFinishPressed = function(posPerct) {
     var widthComposerArea = window.innerWidth - LeapManager.NO_TONE_MARGIN_PERCENT*window.innerWidth/100;
     var currentWidth = posPerct.left*window.innerWidth/100;
     if(currentWidth >= widthComposerArea) {
-        var instHeight = MakerViz.INST_CHANGE_HEIGHT_PERCENT + MakerViz.INST_CHANGE_HMARGIN_PERCENT;
+        var instHeight = MakerViz.INST_CHANGE_SELECTED_HEIGHT_PERCENT + MakerViz.INST_CHANGE_HMARGIN_PERCENT;
         //We subtract 1, because the first element of the list of boxes is the finish button.
         if((100-posPerct.top) >= MakerViz.INST_CHANGE_HMARGIN_PERCENT &&
             (100-posPerct.top) <= MakerViz.INST_CHANGE_HMARGIN_PERCENT+instHeight) return true;

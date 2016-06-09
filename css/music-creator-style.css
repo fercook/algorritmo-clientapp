@@ -109,6 +109,15 @@ path.line {
 .finish-label {
     text-anchor: middle;
     font-family: "Aller Regular", Calibri;
+    fill: white;
+}
+
+.pick-label {
+    text-anchor: middle;
+    font-size: 16px;
+    font-weight: bold;
+    font-family: "Aller Regular", Calibri;
+    fill: #4e4e4e;
 }
 
 .counter {
@@ -116,4 +125,8 @@ path.line {
     font-family: "Aller Regular", Calibri;
     fill: #f15a25;
     font-size: 20px;
+}
+
+.change-inst-zonerect {
+    fill: #deded6;
 }

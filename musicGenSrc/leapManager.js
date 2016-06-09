@@ -65,7 +65,7 @@ LeapManager.INSTRUMENT_LIST = [
      channel: 2},
     {id: 114,
      name: "steel_drums",
-     color: "#1efef6",
+     color: "#8c54ff",
      unselectColor: "grey",
      channel: 1}
 ];
@@ -270,7 +270,10 @@ LeapManager.changeToGivenInstrument = function(handState, instrumentIndex) {
     if(0 <= instrumentIndex && instrumentIndex < LeapManager.INSTRUMENT_LIST.length) {
        handState.instrumentIndex = instrumentIndex;
 
-       this.currentHandInstrument = handState.instrumentIndex; 
+       if(this.currentHandInstrument !== handState.instrumentIndex) {
+          this.currentHandInstrument = handState.instrumentIndex;
+          MakerViz.applyInstChangeVisuals();
+      }
     }
     else console.error("changeToGivenIntrument: Trying to assign an instrument which does not exist.")
 }

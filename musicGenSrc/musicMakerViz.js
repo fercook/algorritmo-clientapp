@@ -9,8 +9,10 @@ MakerViz.SCORE_HEIGHT = window.innerHeight;
  * Constants containing the percentage used by each instrument change box on the
  * score zone.
  */
+MakerViz.INST_CHANGE_LABEL_HEIGHT = 10;
 MakerViz.INST_CHANGE_HMARGIN_PERCENT = 5;
-MakerViz.INST_CHANGE_HEIGHT_PERCENT = 15;
+MakerViz.INST_CHANGE_SELECTED_HEIGHT_PERCENT = 15;
+MakerViz.INST_CHANGE_HEIGHT_PERCENT = 10;
 
 MakerViz.PROGRESS_BAR_WMARGIN = 25;
 MakerViz.PROGRESS_BAR_HEIGHT = 25;
@@ -46,18 +48,21 @@ MakerViz.adjustSVGArea = function() {
 
     this.printLines(LeapManager.NUMBER_OF_TONES, window.innerWidth, playableHeight);
 
+    var buttonAreas = playAreaContainer.append("g").attr("class", "button-areas");
+
     playAreaContainer.append("g").attr("class", "circle-container");
     playAreaContainer.append("g").attr("class", "tail-container");
 
-    this.printFinishButton(playAreaContainer);
-    this.printInstChangeAreas(playAreaContainer);
+    this.printFinishButton(buttonAreas);
+    this.printInstChangeZone(buttonAreas);
+    this.printInstChangeAreas(buttonAreas);
     //this.printVoronoi();
     this.drawIndications();
 }
 
 MakerViz.printFinishButton = function(playAreaContainer) {
     var margin = MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_HMARGIN_PERCENT / 100;
-    var radius = MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_HEIGHT_PERCENT/(2*100);
+    var radius = MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_SELECTED_HEIGHT_PERCENT/(2*100);
     var rightMarginStartingWidth = window.innerWidth - LeapManager.NO_TONE_MARGIN_PERCENT*window.innerWidth/100
     playAreaContainer.append("circle")
         .attr("class", "finish-button")
@@ -71,16 +76,60 @@ MakerViz.printFinishButton = function(playAreaContainer) {
         .text("Finish!");
 };
 
+MakerViz.printInstChangeZone = function(playAreaContainer) {
+    var label = MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_LABEL_HEIGHT / 100
+    var halfMargin = MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_HMARGIN_PERCENT / (2*100);
+    var areaHeight = LeapManager.INSTRUMENT_LIST.length*MakerViz.PLAYAREA_HEIGHT*((MakerViz.INST_CHANGE_HMARGIN_PERCENT/2)+MakerViz.INST_CHANGE_SELECTED_HEIGHT_PERCENT)/100;
+    var areaWidth = MakerViz.PLAYAREA_HEIGHT*(MakerViz.INST_CHANGE_SELECTED_HEIGHT_PERCENT+MakerViz.INST_CHANGE_HMARGIN_PERCENT) / 100;
+    playAreaContainer.append("rect")
+        .attr("class", "change-inst-zonerect")
+        .attr("x", halfMargin)
+        .attr("y", halfMargin)
+        .attr("width", areaWidth)
+        .attr("height", areaHeight+label+halfMargin);
+
+    playAreaContainer.append("text")
+        .attr("class", "pick-label")
+        .attr("x", areaWidth/2+halfMargin)
+        .attr("y", halfMargin*3)
+        .append("tspan")
+            .attr("x", areaWidth/2+halfMargin)
+            .attr("dy", 0)
+            .text("Pick an")
+        .append("tspan")
+            .attr("x", areaWidth/2+halfMargin)
+            .attr("dy", 20)
+            .text("instrument!");
+}
+
 MakerViz.printInstChangeAreas = function(playAreaContainer) {
     var rectX;
     for(var i = 0; i < LeapManager.INSTRUMENT_LIST.length; ++i) {
-        rectX = i*MakerViz.PLAYAREA_HEIGHT*(MakerViz.INST_CHANGE_HMARGIN_PERCENT+MakerViz.INST_CHANGE_HEIGHT_PERCENT)/100;
-        playAreaContainer.append("rect")
-            .attr("class", "change-inst-rect")
-            .attr("x", MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_HMARGIN_PERCENT / 100)
-            .attr("y", rectX + MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_HMARGIN_PERCENT / 100)
-            .attr("width", MakerViz.PLAYAREA_HEIGHT*MakerViz.INST_CHANGE_HEIGHT_PERCENT / 100)
-            .attr("height", MakerViz.PLAYAREA_HEIGHT*MakerViz.INST_CHANGE_HEIGHT_PERCENT/100)
+        rectX = i*MakerViz.PLAYAREA_HEIGHT*((MakerViz.INST_CHANGE_HMARGIN_PERCENT/2)+MakerViz.INST_CHANGE_SELECTED_HEIGHT_PERCENT)/100;
+        
+        var sidePercent = MakerViz.INST_CHANGE_SELECTED_HEIGHT_PERCENT;
+        var halfSizeDiff = 0;
+        if(LeapManager.currentHandInstrument != i) {
+            halfSizeDiff = (MakerViz.INST_CHANGE_SELECTED_HEIGHT_PERCENT - MakerViz.INST_CHANGE_HEIGHT_PERCENT)/2;
+            sidePercent = MakerViz.INST_CHANGE_HEIGHT_PERCENT;
+        }
+
+        if(playAreaContainer.select(".inst-rect" + i).size() !== 0) {
+            playAreaContainer.select(".inst-rect" + i)
+                .transition()
+                    .duration(150)
+                    .attr("x", MakerViz.PLAYAREA_HEIGHT * (MakerViz.INST_CHANGE_HMARGIN_PERCENT+halfSizeDiff) / 100)
+                    .attr("y", rectX + MakerViz.PLAYAREA_HEIGHT * (MakerViz.INST_CHANGE_HMARGIN_PERCENT+MakerViz.INST_CHANGE_LABEL_HEIGHT+halfSizeDiff) / 100)
+                    .attr("width", MakerViz.PLAYAREA_HEIGHT*sidePercent / 100)
+                    .attr("height", MakerViz.PLAYAREA_HEIGHT*sidePercent / 100)
+
+        }
+        else playAreaContainer.append("rect")
+            .attr("class", "change-inst-rect inst-rect" + i)
+            .attr("x", MakerViz.PLAYAREA_HEIGHT * (MakerViz.INST_CHANGE_HMARGIN_PERCENT+halfSizeDiff) / 100)
+            .attr("y", rectX + MakerViz.PLAYAREA_HEIGHT * (MakerViz.INST_CHANGE_HMARGIN_PERCENT+MakerViz.INST_CHANGE_LABEL_HEIGHT+halfSizeDiff) / 100)
+            .attr("width", MakerViz.PLAYAREA_HEIGHT*sidePercent / 100)
+            .attr("height", MakerViz.PLAYAREA_HEIGHT*sidePercent / 100)
             .style("fill", LeapManager.INSTRUMENT_LIST[i].color);
     }
 }
@@ -319,29 +368,6 @@ MakerViz.printPattern = function(instrumentBarContainer) {
 
 
 /**
- * In charge of printing the zone where there are no sound.
- */
-/*MakerViz.printSafeZone = function() {
-    var leapWidth = LeapManager.MAX_WIDTH - LeapManager.MIN_WIDTH;
-    var marginPercent = Math.max(LeapManager.NO_TONE_MARGIN_PERCENT*leapWidth/100, 0)*100/(LeapManager.maxValidWidth-LeapManager.minValidWidth);  
-    var marginInPixels = marginPercent*window.innerWidth/100;
-    d3.select(".play-area").append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", marginInPixels + "px")
-        .attr("height", MakerViz.PLAYAREA_HEIGHT + "px")
-        .style("fill", "#BB3E4F");
-
-    d3.select(".play-area").append("rect")
-        .attr("x", (window.innerWidth - marginInPixels) + "px")
-        .attr("y", 0)
-        .attr("width", marginInPixels + "px")
-        .attr("height", MakerViz.PLAYAREA_HEIGHT + "px")
-        .style("fill", "#BB3E4F");
-}*/
-
-
-/**
  * Print numLines horizontal lines simulating a pentagram. Those lines are 
  * equally separated.
  * totalHeight is the total height of all lines.
@@ -372,7 +398,7 @@ MakerViz.printLines = function(numLines, width, totalHeight) {
 }
 
 
-MakerViz.drawSpeechBallon = function(handid, left, top, instrumentName) {
+/*MakerViz.drawSpeechBallon = function(handid, left, top, instrumentName) {
     d3.selectAll(".speechB.id-" + handid).remove();
     d3.selectAll(".instrumentImg.id-" + handid).remove();
     var speechB = d3.select(".speech-ballons").append("image")
@@ -405,7 +431,7 @@ MakerViz.drawSpeechBallon = function(handid, left, top, instrumentName) {
         .attr("width", "0")
         .attr("height", "0")
         .style("opacity", "0");
-}
+}*/
 
 /**
  * Variable containing the id of the timeout set to delete the user pointer
@@ -461,14 +487,20 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
     if(MusicGenGlobal.LEAP_ENABLED)
         this.currentHandTimeoutId = 
             setTimeout(function() { MakerViz.clearUserPointer(); }, 200);
-
-    //this.drawSpeechBallon(handState.handId, left*window.innerWidth/100, top*this.PLAYAREA_HEIGHT/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
 };
 
 
 MakerViz.render = function() {
     var insBarContainer = this.printRecordedInstruments();
     this.printPattern(insBarContainer);
+};
+
+/**
+ * Callback called each time that there is an instrument change.
+ * @return {[type]} [description]
+ */
+MakerViz.applyInstChangeVisuals = function() {
+    this.printInstChangeAreas(d3.select(".play-area"));
 };
 
 
