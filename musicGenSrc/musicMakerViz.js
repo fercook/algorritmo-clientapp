@@ -58,22 +58,23 @@ MakerViz.adjustSVGArea = function() {
 MakerViz.printFinishButton = function(playAreaContainer) {
     var margin = MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_HMARGIN_PERCENT / 100;
     var radius = MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_HEIGHT_PERCENT/(2*100);
+    var rightMarginStartingWidth = window.innerWidth - LeapManager.NO_TONE_MARGIN_PERCENT*window.innerWidth/100
     playAreaContainer.append("circle")
         .attr("class", "finish-button")
-        .attr("cx", margin + radius)
-        .attr("cy", margin + radius)
+        .attr("cx", margin + radius + rightMarginStartingWidth)
+        .attr("cy", MakerViz.PLAYAREA_HEIGHT - margin - radius)
         .attr("r", radius);
     playAreaContainer.append("text")
         .attr("class", "finish-label")
-        .attr("x", margin + radius)
-        .attr("y", margin + radius)
+        .attr("x", margin + radius + rightMarginStartingWidth)
+        .attr("y", MakerViz.PLAYAREA_HEIGHT - margin - radius)
         .text("Finish!");
 };
 
 MakerViz.printInstChangeAreas = function(playAreaContainer) {
     var rectX;
     for(var i = 0; i < LeapManager.INSTRUMENT_LIST.length; ++i) {
-        rectX = (i + 1)*MakerViz.PLAYAREA_HEIGHT*(MakerViz.INST_CHANGE_HMARGIN_PERCENT+MakerViz.INST_CHANGE_HEIGHT_PERCENT)/100;
+        rectX = i*MakerViz.PLAYAREA_HEIGHT*(MakerViz.INST_CHANGE_HMARGIN_PERCENT+MakerViz.INST_CHANGE_HEIGHT_PERCENT)/100;
         playAreaContainer.append("rect")
             .attr("class", "change-inst-rect")
             .attr("x", MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_HMARGIN_PERCENT / 100)

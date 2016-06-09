@@ -39,7 +39,7 @@ MusicGenGlobal.getInstrumentChange = function(posPerct) {
         var instHeight = MakerViz.INST_CHANGE_HEIGHT_PERCENT + MakerViz.INST_CHANGE_HMARGIN_PERCENT;
         var instId = parseInt(posPerct.top / instHeight);
         //We subtract 1, because the first element of the list of boxes is the finish button.
-        if(posPerct.top >= instId*instHeight+MakerViz.INST_CHANGE_HMARGIN_PERCENT) return instId - 1;
+        if(posPerct.top >= instId*instHeight+MakerViz.INST_CHANGE_HMARGIN_PERCENT) return instId;
     }
     return -1;
 };
@@ -48,14 +48,13 @@ MusicGenGlobal.getInstrumentChange = function(posPerct) {
  * Returns true when the current position matches the "finish" button position.
  */
 MusicGenGlobal.isFinishPressed = function(posPerct) {
-    var widthChangeArea = MakerViz.PLAYAREA_HEIGHT*
-        (MakerViz.INST_CHANGE_HEIGHT_PERCENT+MakerViz.INST_CHANGE_HMARGIN_PERCENT) / 100
+    var widthComposerArea = window.innerWidth - LeapManager.NO_TONE_MARGIN_PERCENT*window.innerWidth/100;
     var currentWidth = posPerct.left*window.innerWidth/100;
-    if(currentWidth <= widthChangeArea) {
+    if(currentWidth >= widthComposerArea) {
         var instHeight = MakerViz.INST_CHANGE_HEIGHT_PERCENT + MakerViz.INST_CHANGE_HMARGIN_PERCENT;
         //We subtract 1, because the first element of the list of boxes is the finish button.
-        if(posPerct.top >= MakerViz.INST_CHANGE_HMARGIN_PERCENT &&
-            posPerct.top <= MakerViz.INST_CHANGE_HMARGIN_PERCENT+instHeight) return true;
+        if((100-posPerct.top) >= MakerViz.INST_CHANGE_HMARGIN_PERCENT &&
+            (100-posPerct.top) <= MakerViz.INST_CHANGE_HMARGIN_PERCENT+instHeight) return true;
     }
     return false;
 };
