@@ -6,12 +6,9 @@ var HandPlayer = {};
 
 //Constant containing time between tones.
 HandPlayer.INTERVAL_TIME = 300;
-HandPlayer.TEMPO = 200; //beats per minute.
+HandPlayer.TEMPO = 160; //beats per minute.
 
-//Minimum time a record should last.
-HandPlayer.MINIMUM_RECORDING_TIME = 5000;
-
-HandPlayer.NUM_TONES_PATTERN = 67;
+HandPlayer.NUM_TONES_PATTERN = 40;
 
 //How hard the note hits, from 0-127.
 HandPlayer.VELOCITY = 127;
@@ -137,11 +134,6 @@ HandPlayer.record = function(toneIndex, hands, destArray) {
             this.applyCurrentTone(toneIndex, i, hands[0].currentTone, destArray);
         else if(!destArray[i] || !destArray[i][toneIndex]) this.addSilence(toneIndex, i, destArray);
     }
-}
-
-
-HandPlayer.enoughtRecordingTime = function() {
-    return performance.now() - this.timeSinceStartingToRecord >= HandPlayer.MINIMUM_RECORDING_TIME;
 }
 
 
