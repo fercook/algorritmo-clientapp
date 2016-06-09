@@ -13,7 +13,7 @@
 }*/
 
 HorSManager.goToPreviousPage = function () {
-    window.location.href = '/';
+    window.location.href = window.location.pathname;
 };
 
 //Load Midi streamer
