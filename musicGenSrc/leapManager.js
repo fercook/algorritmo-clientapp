@@ -14,7 +14,7 @@ LeapManager.MAX_WIDTH = 150;
 //to play tones.
 //This allows the user to stop and continue playing a tone very fast, without changing
 //the playing gesture.
-LeapManager.NO_TONE_MARGIN_PERCENT = 15;
+LeapManager.NO_TONE_MARGIN_PERCENT = 10.5;
 
 //Variables containing the palm height range accepted as a input. 
 //This range will depend on the screen aspect ratio, defining this way a better 

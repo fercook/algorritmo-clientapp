@@ -30,12 +30,12 @@ ParticleManager.playOptions = {
     position: new THREE.Vector3(0, 0, 0),
     positionRandomness: 2.11,
     velocity: new THREE.Vector3(),
-    velocityRandomness: 3,
+    velocityRandomness: 1.5,
     color: 0x000000,
     colorRandomness: 0,
     turbulence: 1,
     lifetime: 2.5,
-    size: 14,
+    size: 6,
     sizeRandomness: 25
 };
 
@@ -60,7 +60,7 @@ ParticleManager.safeZoneSpawnerOptions = {
 };
 
 ParticleManager.playSpawnerOptions = {
-    spawnRate: 2935,
+    spawnRate: 15035,
     horizontalSpeed: 1.5,
     verticalSpeed: 1.33,
     timeScale: 0.6

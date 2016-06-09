@@ -1,6 +1,6 @@
 var MakerViz = {};
 
-MakerViz.CIRCLE_RADIUS = 10;
+MakerViz.CIRCLE_RADIUS = 15;
 
 MakerViz.SCORE_WIDTH = window.innerWidth;
 MakerViz.SCORE_HEIGHT = window.innerHeight;
@@ -11,7 +11,6 @@ MakerViz.SCORE_HEIGHT = window.innerHeight;
  */
 MakerViz.INST_CHANGE_HMARGIN_PERCENT = 5;
 MakerViz.INST_CHANGE_HEIGHT_PERCENT = 15;
-MakerViz.INST_CHANGE_WIDTH_PERCENT = 10;
 
 MakerViz.PROGRESS_BAR_WMARGIN = 25;
 MakerViz.PROGRESS_BAR_HEIGHT = 25;
@@ -19,6 +18,8 @@ MakerViz.MARGIN_BETWEEN_BARS = 3;
 
 MakerViz.TITLE_SPACE = 130;
 MakerViz.PROGRESS_BAR_HMARGIN = 25;
+
+MakerViz.LEGEND_WIDTH_PERCENT = 5;
 
 //Constant containing render time.
 MakerViz.RENDER_INTERVAL_TIME = 300;
@@ -41,13 +42,12 @@ MakerViz.adjustSVGArea = function() {
         .attr("class", "play-area")
         .attr("transform", "translate(0," + (window.innerHeight - MakerViz.TITLE_SPACE - playableHeight) + ")");
 
-    playAreaContainer.append("g").attr("class", "circle-container");
-    playAreaContainer.append("g").attr("class", "tail-container");
-
-    this.printSafeZone();
+    //this.printSafeZone();
 
     this.printLines(LeapManager.NUMBER_OF_TONES, window.innerWidth, playableHeight);
-    playAreaContainer.append("g").attr("class", "speech-ballons");
+
+    playAreaContainer.append("g").attr("class", "circle-container");
+    playAreaContainer.append("g").attr("class", "tail-container");
 
     this.printFinishButton(playAreaContainer);
     this.printInstChangeAreas(playAreaContainer);
@@ -76,9 +76,9 @@ MakerViz.printInstChangeAreas = function(playAreaContainer) {
         rectX = (i + 1)*MakerViz.PLAYAREA_HEIGHT*(MakerViz.INST_CHANGE_HMARGIN_PERCENT+MakerViz.INST_CHANGE_HEIGHT_PERCENT)/100;
         playAreaContainer.append("rect")
             .attr("class", "change-inst-rect")
-            .attr("x", 0)
+            .attr("x", MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_HMARGIN_PERCENT / 100)
             .attr("y", rectX + MakerViz.PLAYAREA_HEIGHT * MakerViz.INST_CHANGE_HMARGIN_PERCENT / 100)
-            .attr("width", window.innerWidth*MakerViz.INST_CHANGE_WIDTH_PERCENT / 100)
+            .attr("width", MakerViz.PLAYAREA_HEIGHT*MakerViz.INST_CHANGE_HEIGHT_PERCENT / 100)
             .attr("height", MakerViz.PLAYAREA_HEIGHT*MakerViz.INST_CHANGE_HEIGHT_PERCENT/100)
             .style("fill", LeapManager.INSTRUMENT_LIST[i].color);
     }
@@ -320,7 +320,7 @@ MakerViz.printPattern = function(instrumentBarContainer) {
 /**
  * In charge of printing the zone where there are no sound.
  */
-MakerViz.printSafeZone = function() {
+/*MakerViz.printSafeZone = function() {
     var leapWidth = LeapManager.MAX_WIDTH - LeapManager.MIN_WIDTH;
     var marginPercent = Math.max(LeapManager.NO_TONE_MARGIN_PERCENT*leapWidth/100, 0)*100/(LeapManager.maxValidWidth-LeapManager.minValidWidth);  
     var marginInPixels = marginPercent*window.innerWidth/100;
@@ -337,28 +337,37 @@ MakerViz.printSafeZone = function() {
         .attr("width", marginInPixels + "px")
         .attr("height", MakerViz.PLAYAREA_HEIGHT + "px")
         .style("fill", "#BB3E4F");
-}
+}*/
 
 
 /**
  * Print numLines horizontal lines simulating a pentagram. Those lines are 
  * equally separated.
  * totalHeight is the total height of all lines.
- * width is the width of each line.
+ * width is the width of the screen.
  */
 MakerViz.printLines = function(numLines, width, totalHeight) {
+    var safeZoneWidth = LeapManager.NO_TONE_MARGIN_PERCENT*window.innerWidth/100;
     var linesContainer = 
         d3.select(".play-area").append("g")
-            .attr("class", "lines-container");
+            .attr("class", "lines-container")
+             .attr("transform", "translate(" + (safeZoneWidth - MakerViz.LEGEND_WIDTH_PERCENT) + ", 0)");
     var lineHeight = totalHeight/numLines;
+
+    linesContainer.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", width - safeZoneWidth*2 - MakerViz.LEGEND_WIDTH_PERCENT)
+            .attr("height", lineHeight*(numLines-1))
+            .attr("class", "score-rect");
 
     for(var i = 0; i < numLines; ++i)
         linesContainer.append("svg:line")
             .attr("x1", 0)
             .attr("y1", lineHeight*i)
-            .attr("x2", width)
+            .attr("x2", width - safeZoneWidth*2 - MakerViz.LEGEND_WIDTH_PERCENT)
             .attr("y2", lineHeight*i)
-            .attr("class","horizontal-line");
+            .attr("class", i % 5 === 0 ? "bold-horizontal-line" : "horizontal-line");
 }
 
 
@@ -452,7 +461,7 @@ MakerViz.updateHandOnScreen = function(handFrame, handState) {
         this.currentHandTimeoutId = 
             setTimeout(function() { MakerViz.clearUserPointer(); }, 200);
 
-    this.drawSpeechBallon(handState.handId, left*window.innerWidth/100, top*this.PLAYAREA_HEIGHT/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
+    //this.drawSpeechBallon(handState.handId, left*window.innerWidth/100, top*this.PLAYAREA_HEIGHT/100, LeapManager.INSTRUMENT_LIST[handState.instrumentIndex].name);
 };
 
 

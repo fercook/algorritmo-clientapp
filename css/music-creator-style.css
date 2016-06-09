@@ -28,7 +28,18 @@ svg {
 }
 
 .horizontal-line {
-    stroke: black;
+    stroke: #c2c1bd;
+}
+
+.bold-horizontal-line {
+    stroke: #a7a7a4;
+    stroke-width: 2px;
+}
+
+.score-rect {
+    stroke: #a7a7a4;
+    stroke-width: 2px;
+    fill: #f0efeb;
 }
 
 .hand-mark {

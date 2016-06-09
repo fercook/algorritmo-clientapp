@@ -32,8 +32,10 @@ MusicGenGlobal.getPositionPercentage = function(jockerObject) {
  * outside of the changing area.
  */
 MusicGenGlobal.getInstrumentChange = function(posPerct) {
-
-    if(posPerct.left <= MakerViz.INST_CHANGE_WIDTH_PERCENT) {
+    var widthChangeArea = MakerViz.PLAYAREA_HEIGHT*
+        (MakerViz.INST_CHANGE_HEIGHT_PERCENT+MakerViz.INST_CHANGE_HMARGIN_PERCENT) / 100
+    var currentWidth = posPerct.left*window.innerWidth/100;
+    if(currentWidth <= widthChangeArea) {
         var instHeight = MakerViz.INST_CHANGE_HEIGHT_PERCENT + MakerViz.INST_CHANGE_HMARGIN_PERCENT;
         var instId = parseInt(posPerct.top / instHeight);
         //We subtract 1, because the first element of the list of boxes is the finish button.
@@ -46,7 +48,10 @@ MusicGenGlobal.getInstrumentChange = function(posPerct) {
  * Returns true when the current position matches the "finish" button position.
  */
 MusicGenGlobal.isFinishPressed = function(posPerct) {
-    if(posPerct.left <= MakerViz.INST_CHANGE_WIDTH_PERCENT) {
+    var widthChangeArea = MakerViz.PLAYAREA_HEIGHT*
+        (MakerViz.INST_CHANGE_HEIGHT_PERCENT+MakerViz.INST_CHANGE_HMARGIN_PERCENT) / 100
+    var currentWidth = posPerct.left*window.innerWidth/100;
+    if(currentWidth <= widthChangeArea) {
         var instHeight = MakerViz.INST_CHANGE_HEIGHT_PERCENT + MakerViz.INST_CHANGE_HMARGIN_PERCENT;
         //We subtract 1, because the first element of the list of boxes is the finish button.
         if(posPerct.top >= MakerViz.INST_CHANGE_HMARGIN_PERCENT &&
