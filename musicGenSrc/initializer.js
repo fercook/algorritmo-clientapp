@@ -72,7 +72,7 @@ MusicGenGlobal.finishComposition = function() {
 
 MakerViz.adjustSVGArea();
 window.addEventListener("resize", MakerViz.adjustSVGArea.bind(MakerViz));
-setInterval(MakerViz.render.bind(MakerViz), MakerViz.RENDER_INTERVAL_TIME);
+//setInterval(MakerViz.render.bind(MakerViz), MakerViz.RENDER_INTERVAL_TIME);
 
 //Call this method when loading the website.
 if(MusicGenGlobal.LEAP_ENABLED) {
@@ -80,6 +80,7 @@ if(MusicGenGlobal.LEAP_ENABLED) {
     window.addEventListener("resize", LeapManager.adjustLeapValidArea.bind(LeapManager));
 }
 
+//In charge of calling MakerViz.render too.
 setInterval(HandPlayer.processTones.bind(HandPlayer), HandPlayer.INTERVAL_TIME);
 
 ParticleManager.loadCanvasParticles();
