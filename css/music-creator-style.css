@@ -99,7 +99,7 @@ path.line {
 }
 
 .shader-rect {
-    opacity: 0.3;
+    opacity: 0.2;
 }
 
 .finish-button {
@@ -129,4 +129,9 @@ path.line {
 
 .change-inst-zonerect {
     fill: #deded6;
+}
+
+.opaque-pattern {
+    opacity: 0.6;
+    stroke-opacity: 0.6;
 }

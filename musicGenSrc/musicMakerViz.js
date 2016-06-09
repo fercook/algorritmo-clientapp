@@ -244,8 +244,7 @@ MakerViz.printRecordedInstruments = function() {
     var top = MakerViz.PROGRESS_BAR_HMARGIN;
 
     for(var inst = 0; inst < pattern.length; ++inst) {
-        var color = this.isCurrentColor(inst) ? 
-            LeapManager.INSTRUMENT_LIST[inst].color : LeapManager.INSTRUMENT_LIST[inst].unselectColor;
+        var color = LeapManager.INSTRUMENT_LIST[inst].color;
         var gContainer = d3.select(".inst-bar-g-" + inst);
         var lContainer = d3.select(".inst-bar-line-g-" + inst);
         if(gContainer.size() === 0) {
@@ -268,16 +267,17 @@ MakerViz.printRecordedInstruments = function() {
         }
 
         lContainer.select(".line")
-              .datum(pattern[inst])
+            .classed("opaque-pattern", this.isCurrentColor(inst) ? false : true)
+            .datum(pattern[inst])
               .transition()
-              .attr("d", line)
-              .style("stroke", color);
-        lContainer.select(".area")
-                .datum(pattern[inst])
-                .transition()
-                .attr("d", area)
-                .style("fill", color)
+                .attr("d", line)
                 .style("stroke", color);
+        lContainer.select(".area")
+            .classed("opaque-pattern", this.isCurrentColor(inst) ? false : true)
+            .datum(pattern[inst])
+              .transition()
+                .attr("d", area)
+                .style("fill", color);
 
         //Ensure that it does not contain the class reserver for the current instrument rectangle.
         gContainer.select("rect").classed("current-ints-rect", false);
