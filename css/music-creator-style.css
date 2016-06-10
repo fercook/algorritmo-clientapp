@@ -106,7 +106,12 @@ path.line {
     fill: red;
 }
 
+.clef-icon {
+    align: middle;
+}
+
 .finish-label {
+    alignment-baseline: middle;
     text-anchor: middle;
     font-family: "Aller Regular", Calibri;
     fill: white;
@@ -119,6 +124,24 @@ path.line {
     font-family: "Aller Regular", Calibri;
     fill: #4e4e4e;
 }
+
+.legend-text {
+    alignment-baseline: middle;
+    text-anchor: middle;
+    font-size: 16px;
+    font-weight: bold;
+    font-family: "Aller Regular", Calibri;
+    fill: #b58f82;
+}
+
+.legend-low {
+    fill: #ffffff;
+}
+
+.legend-high {
+    fill: #8f6454;
+}
+
 
 .counter {
     text-anchor: middle;

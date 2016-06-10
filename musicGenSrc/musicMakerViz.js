@@ -21,7 +21,7 @@ MakerViz.MARGIN_BETWEEN_BARS = 3;
 MakerViz.TITLE_SPACE = 130;
 MakerViz.PROGRESS_BAR_HMARGIN = 25;
 
-MakerViz.LEGEND_WIDTH_PERCENT = 5;
+MakerViz.LEGEND_WIDTH_PERCENT = 3;
 
 //Constant containing render time.
 MakerViz.RENDER_INTERVAL_TIME = 300;
@@ -47,6 +47,7 @@ MakerViz.adjustSVGArea = function() {
     //this.printSafeZone();
 
     this.printLines(LeapManager.NUMBER_OF_TONES, window.innerWidth, playableHeight);
+    this.printLegend(LeapManager.NUMBER_OF_TONES, playableHeight);
 
     var buttonAreas = playAreaContainer.append("g").attr("class", "button-areas");
 
@@ -367,6 +368,67 @@ MakerViz.printPattern = function(instrumentBarContainer) {
 }
 
 
+MakerViz.printLegend = function(numLines, totalHeight) {
+    var safeZoneWidth = LeapManager.NO_TONE_MARGIN_PERCENT*window.innerWidth/100;
+    var legendWidth = MakerViz.LEGEND_WIDTH_PERCENT*window.innerWidth/100;
+
+    var legendContainer = d3.select(".play-area").append("g")
+        .attr("class", "legend")
+        .attr("transform", "translate(" + safeZoneWidth + ", 0)");
+
+    //Create gradient.
+    var gradient = legendContainer.append("defs")
+      .append("linearGradient")
+        .attr("id", "legendGradient")
+        .attr("x1", "100%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "100%")
+        .attr("spreadMethod", "pad");
+
+    gradient.append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "#f7f7ed")
+        .attr("stop-opacity", 1);
+
+    gradient.append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "#b58f82")
+        .attr("stop-opacity", 1);
+
+    var lineHeight = totalHeight/numLines;
+
+    legendContainer.append("rect")
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("width", legendWidth)
+            .attr("height", totalHeight-lineHeight)
+            .attr("class", "score-rect")
+            .style("fill", "url(#legendGradient)");
+
+    legendContainer.append("text")
+        .attr("class", "legend-text legend-low")
+        .attr("x", legendWidth/2)
+        .attr("y", totalHeight-lineHeight - 15)
+        .text("Low");
+
+    legendContainer.append("text")
+        .attr("class", "legend-text legend-high")
+        .attr("x", legendWidth/2)
+        .attr("y", 15)
+        .text("High");
+
+    legendContainer.append("svg:image")
+        .attr("xlink:href", "imgs/clef.png")
+        .attr("x", legendWidth/4)
+        .attr("y", (totalHeight-lineHeight)/2-legendWidth/2)
+        .attr("height", "100%")
+        .attr("width", legendWidth/2)
+        //.attr("viewBox", 0 + " " + (totalHeight-lineHeight)/2 + " " + legendWidth + " 0")
+        .attr("preserveAspectRatio", "xMaxYMin meet")
+        .attr("class", "clef-icon");
+};
+
 /**
  * Print numLines horizontal lines simulating a pentagram. Those lines are 
  * equally separated.
@@ -375,16 +437,17 @@ MakerViz.printPattern = function(instrumentBarContainer) {
  */
 MakerViz.printLines = function(numLines, width, totalHeight) {
     var safeZoneWidth = LeapManager.NO_TONE_MARGIN_PERCENT*window.innerWidth/100;
+    var legendWidth = MakerViz.LEGEND_WIDTH_PERCENT*window.innerWidth/100;
     var linesContainer = 
         d3.select(".play-area").append("g")
             .attr("class", "lines-container")
-             .attr("transform", "translate(" + (safeZoneWidth - MakerViz.LEGEND_WIDTH_PERCENT) + ", 0)");
+             .attr("transform", "translate(" + (safeZoneWidth + legendWidth) + ", 0)");
     var lineHeight = totalHeight/numLines;
 
     linesContainer.append("rect")
             .attr("x", 0)
             .attr("y", 0)
-            .attr("width", width - safeZoneWidth*2 - MakerViz.LEGEND_WIDTH_PERCENT)
+            .attr("width", width - safeZoneWidth*2 - legendWidth)
             .attr("height", lineHeight*(numLines-1))
             .attr("class", "score-rect");
 
@@ -392,46 +455,11 @@ MakerViz.printLines = function(numLines, width, totalHeight) {
         linesContainer.append("svg:line")
             .attr("x1", 0)
             .attr("y1", lineHeight*i)
-            .attr("x2", width - safeZoneWidth*2 - MakerViz.LEGEND_WIDTH_PERCENT)
+            .attr("x2", width - safeZoneWidth*2 - legendWidth)
             .attr("y2", lineHeight*i)
             .attr("class", i % 5 === 0 ? "bold-horizontal-line" : "horizontal-line");
 }
 
-
-/*MakerViz.drawSpeechBallon = function(handid, left, top, instrumentName) {
-    d3.selectAll(".speechB.id-" + handid).remove();
-    d3.selectAll(".instrumentImg.id-" + handid).remove();
-    var speechB = d3.select(".speech-ballons").append("image")
-        .attr("href", "imgs/speechB.png")
-        .attr("class", "id-" + handid + " speechB")
-        .attr("width", "100px")
-        .attr("height", "100px")
-        .attr("x", left - 100)
-        .attr("y", top - 100);
-    var instrumentImg = d3.select(".speech-ballons").append("image")
-        .attr("href", "imgs/" + instrumentName + ".png")
-        .attr("class", "id-" + handid + " instrumentImg")
-        .attr("width", "40px")
-        .attr("height", "40px")
-        .attr("x", left - 70)
-        .attr("y", top - 82);
-    speechB.transition()
-        .delay(200)
-        .duration(500)
-        .attr("x", left - 50)
-        .attr("y", top - 50)
-        .attr("width", "0")
-        .attr("height", "0")
-        .style("opacity", "0");
-    instrumentImg.transition()
-        .delay(200)
-        .duration(500)
-        .attr("x", left - 35)
-        .attr("y", top - 41)
-        .attr("width", "0")
-        .attr("height", "0")
-        .style("opacity", "0");
-}*/
 
 /**
  * Variable containing the id of the timeout set to delete the user pointer
