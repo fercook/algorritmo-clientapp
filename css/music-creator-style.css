@@ -155,6 +155,6 @@ path.line {
 }
 
 .opaque-pattern {
-    opacity: 0.6;
-    stroke-opacity: 0.6;
+    opacity: 0.4;
+    stroke-opacity: 0.2;
 }
