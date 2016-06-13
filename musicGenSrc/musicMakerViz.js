@@ -220,7 +220,7 @@ MakerViz.printRecordedInstruments = function() {
         .range([0, window.innerWidth - MakerViz.PROGRESS_BAR_WMARGIN*2]);
 
     var y = d3.scale.linear()
-        .range([MakerViz.PROGRESS_BAR_HEIGHT, 0]);
+        .range([MakerViz.PROGRESS_BAR_HEIGHT/2, 0]);
 
     var line = d3.svg.line()
         .x(function(d, i) { 
@@ -234,13 +234,36 @@ MakerViz.printRecordedInstruments = function() {
         .x(function(d, i) {
             return x(i);
         })
-        .y0(MakerViz.PROGRESS_BAR_HEIGHT)
+        .y0(MakerViz.PROGRESS_BAR_HEIGHT/2)
         .y1(function(d, i) {
             return y(Math.max(d.tones[0], 0));
         });
 
+    //Inverse variables:
+    var yInverse = d3.scale.linear()
+        .range([MakerViz.PROGRESS_BAR_HEIGHT/2, MakerViz.PROGRESS_BAR_HEIGHT]);
+
+    var lineInverse = d3.svg.line()
+        .x(function(d, i) { 
+            return x(i); 
+        })
+        .y(function(d, i) { 
+            return yInverse(Math.max(d.tones[0], 0)); 
+        });
+
+    var areaInverse = d3.svg.area()
+        .x(function(d, i) {
+            return x(i);
+        })
+        .y0(MakerViz.PROGRESS_BAR_HEIGHT/2)
+        .y1(function(d, i) {
+            return yInverse(Math.max(d.tones[0], 0));
+        });
+
     x.domain([0, HandPlayer.NUM_TONES_PATTERN-1]);
     y.domain([0, LeapManager.NUMBER_OF_TONES]);
+
+    yInverse.domain([0, LeapManager.NUMBER_OF_TONES]);
 
     var top = MakerViz.PROGRESS_BAR_HMARGIN;
 
@@ -265,6 +288,14 @@ MakerViz.printRecordedInstruments = function() {
                 .attr("class", "area")
                 .style("fill", color)
                 .style("stroke", color);
+
+            lContainer.append("path")
+                .attr("class", "line inverse-line")
+                .style("stroke", color);
+            lContainer.append("path")
+                .attr("class", "area inverse-area")
+                .style("fill", color)
+                .style("stroke", color);
         }
 
         lContainer.select(".line")
@@ -278,6 +309,19 @@ MakerViz.printRecordedInstruments = function() {
             .datum(pattern[inst])
               .transition()
                 .attr("d", area)
+                .style("fill", color);
+
+        lContainer.select(".inverse-line")
+            .classed("opaque-pattern", this.isCurrentColor(inst) ? false : true)
+            .datum(pattern[inst])
+              .transition()
+                .attr("d", lineInverse)
+                .style("stroke", color);
+        lContainer.select(".inverse-area")
+            .classed("opaque-pattern", this.isCurrentColor(inst) ? false : true)
+            .datum(pattern[inst])
+              .transition()
+                .attr("d", areaInverse)
                 .style("fill", color);
 
         //Ensure that it does not contain the class reserver for the current instrument rectangle.
