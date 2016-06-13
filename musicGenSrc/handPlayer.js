@@ -6,7 +6,7 @@ var HandPlayer = {};
 
 //Constant containing time between tones.
 HandPlayer.INTERVAL_TIME = 300;
-HandPlayer.TEMPO = 160; //beats per minute.
+HandPlayer.TEMPO = 200; //beats per minute.
 
 HandPlayer.NUM_TONES_PATTERN = 40;
 
