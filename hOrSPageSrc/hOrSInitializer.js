@@ -16,6 +16,8 @@ HorSManager.goToPreviousPage = function () {
     window.location.href = window.location.pathname;
 };
 
+HorSManager.visUpdater = startVisualization("songtime");
+
 //Load Midi streamer
 MIDI.loadPlugin({
     soundfontUrl: "./soundfonts/",

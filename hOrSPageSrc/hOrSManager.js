@@ -55,6 +55,8 @@ HorSManager.loadTrack = function() {
                    MIDI.Player.stop();
                    MIDI.Player.start();
             }
+            HorSManager.visUpdater(data.note);
+            console.log(data.velocity);
             //var now = data.now; // where we are now
             //var end = data.end; // time when song ends
             //var channel = data.channel; // channel note is playing on

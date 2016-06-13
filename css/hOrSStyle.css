@@ -56,7 +56,7 @@ div#top img{ vertical-align: middle;      }
   box-shadow: 16px 10px 3px #E0E0E0;
 }
 
-div#songtime{width: 1176px; margin: 0 auto; padding-top: 40px; color: orangered; font-size: 24px; font-weight: bold;}
+div#songtime{width: 400px; margin: 0 auto; padding-top: 0px; color: orangered; font-size: 10px; font-weight: bold;height: 400px;font-family: sans-serif;}
 img#musicplayerviz{display: block; margin: 0 auto; padding-top: 8px;padding-bottom: 140px;}
 
 div#votezone{
